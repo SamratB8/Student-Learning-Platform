@@ -1,0 +1,35 @@
+deployment_key: cts
+display_name: CTS Student Community
+institution:
+  legal_relationship: independent_student_project
+  disclaimer: >-
+    This platform is privately owned and independently operated by its creator.
+    It is not an official CTS website or service, and CTS does not own, sponsor,
+    endorse, or administer it.
+programmes:
+  - key: diploma
+    display_name: Diploma
+branches:
+  - key: dcst
+    code: DCST
+    display_name: Computer Science and Technology
+    classroom_pool_key: classroom-dcst
+  - key: dme
+    code: DME
+    display_name: Mechanical Engineering
+    classroom_pool_key: classroom-dme
+  - key: dee
+    code: DEE
+    display_name: Electrical Engineering
+    classroom_pool_key: classroom-dee
+  - key: dce
+    code: DCE
+    display_name: Civil Engineering
+    classroom_pool_key: classroom-dce
+policies:
+  student_classroom_connection_required: true
+  classroom_missing_access_mode: reminder_only
+  default_content_visibility: member_only
+  account_activation: manual_super_admin_approval
+branding:
+  use_institution_logo: false

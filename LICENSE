@@ -1,0 +1,99 @@
+STUDENT LEARNING PLATFORM PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Samrat. All rights reserved.
+
+1. Ownership and reservation of rights
+
+The Student Learning Platform, including its source code, object code,
+architecture, database schemas, migrations, application programming interfaces,
+configuration, documentation, tests, designs, user interfaces, text, and other
+original project materials (collectively, the "Software"), is proprietary.
+
+The copyright owner reserves every right in the Software. Possession of, access
+to, or visibility of the Software does not grant any licence or permission.
+
+2. No use without explicit written and signed permission
+
+No person or entity may use the Software or exercise any right in it unless that
+person or entity can produce an explicit written permission document signed by
+the copyright owner who held the relevant rights when the permission was
+granted (a "Permission Document"). The Permission Document must identify the
+recipient, the Software or portion covered, the rights granted, the permitted
+purpose, and any duration or conditions.
+
+The recipient bears responsibility for retaining and producing verifiable proof
+of the Permission Document. Permission is limited strictly to the rights and
+scope stated in that document. Silence, delay, access to a repository, possession
+of a copy, payment of development or hosting expenses, contribution, testing,
+verbal discussion, or past tolerance does not create or imply permission.
+
+3. Prohibited acts
+
+Without a valid Permission Document, no person or entity may, directly or
+indirectly:
+
+a. run, execute, access, host, deploy, operate, or otherwise use the Software;
+b. copy, reproduce, download, clone, mirror, archive, or store the Software;
+c. modify, adapt, translate, arrange, refactor, or create derivative works;
+d. reverse engineer, decompile, disassemble, or attempt to discover source code,
+   algorithms, architecture, or non-public interfaces;
+e. publish, display, disclose, transmit, distribute, sell, sublicense, lease,
+   lend, assign, transfer, or make the Software available to another person;
+f. use the Software or its non-public materials to build, train, evaluate, or
+   improve another product, service, model, dataset, or system;
+g. remove, hide, or change any copyright, ownership, attribution, confidentiality,
+   or licence notice; or
+h. permit, assist, or enable another person to do any prohibited act.
+
+4. No implied, oral, or unsigned licence
+
+All permissions must be explicit, written, and signed. No implied licence,
+estoppel-based permission, oral permission, unsigned approval, or licence by
+conduct is granted by this file. Repository access or collaboration access is
+provided solely for the limited purpose, if any, stated in a valid Permission
+Document.
+
+5. Transfers of ownership and existing permissions
+
+If ownership of any right in the Software is transferred, the new owner controls
+future permissions for the transferred right. A previously granted Permission
+Document continues only to the extent its terms and applicable law make it
+effective after that transfer. No ownership transfer itself grants a licence to
+any third party.
+
+6. Third-party materials
+
+Third-party software, libraries, fonts, media, or other materials remain governed
+by their respective terms. This licence applies only to rights the copyright
+owner is legally entitled to license and does not restrict rights that cannot
+lawfully be restricted.
+
+7. Statutory exceptions
+
+Nothing in this licence excludes a use that applicable law expressly permits
+and does not allow the copyright owner to prohibit or waive. Any person relying
+on such an exception is responsible for establishing that it applies.
+
+8. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, SECURITY, AVAILABILITY, OR
+CORRECTNESS.
+
+9. Limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE COPYRIGHT OWNER AND CONTRIBUTORS
+WILL NOT BE LIABLE FOR ANY CLAIM, LOSS, DAMAGE, OR OTHER LIABILITY ARISING FROM
+OR RELATED TO THE SOFTWARE OR ITS USE, WHETHER IN CONTRACT, TORT, OR OTHERWISE.
+
+10. Enforcement and severability
+
+Any unauthorized act may result in termination of access and pursuit of remedies
+available under applicable law. If any provision is held invalid or
+unenforceable, the remaining provisions continue in effect to the maximum
+extent permitted by law.
+
+For permission, obtain a separate Permission Document signed by the current
+copyright owner. Do not treat repository access, an issue, a pull request, or an
+informal message as permission.
