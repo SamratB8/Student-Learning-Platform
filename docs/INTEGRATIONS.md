@@ -65,6 +65,34 @@ Forbidden operations: list/read/search platform data, read users, update arbitra
 
 Every request is authenticated, rate-limited, schema/size validated, malware-scanned where applicable, idempotent, and audited. Content enters quarantine or `DRAFT`; a human reviews it. No platform process automatically sends private/member data to an AI provider.
 
+## Gemini Developer API (internal AI utility)
+
+Purpose: server-side infrastructure that complements deterministic code and retrieval. It is not a student-facing service and is not callable from any student-facing route. ADR 0003 is authoritative.
+
+Permitted uses: query rewriting, semantic assistance, reranking, ambiguity resolution, context compression, prompt refinement, and content assistance where explicitly allowed.
+
+Required behavior:
+
+- Deterministic code and retrieval run first. The provider only enhances an already-correct result.
+- Every call site defines a non-AI result that is correct on its own. Quota exhaustion, rate limiting, outage, or deliberate disablement degrades polish only.
+- Only academic context already authorized for the requesting user may be sent. The excluded data classes in SECURITY_MODEL.md are excluded by construction.
+- Credentials are server-side and never reach a browser. Prompts and responses are not logged verbatim where they may contain user content.
+- Model output is untrusted input. It is validated before use and never treated as an instruction or an authorization decision.
+
+## Continue in ChatGPT (student handoff)
+
+Purpose: let a student carry permitted academic context into their own ChatGPT account.
+
+This is not a server-to-server integration. The platform authorizes, retrieves, and deterministically assembles a source-marked prompt, then copies it to the clipboard and opens ChatGPT in a new tab. The student pastes it themselves.
+
+Forbidden: using a student's ChatGPT account as an API, injecting into another site's DOM, automating sending, accepting a user-supplied provider key, and sending anything the student is not authorized to see.
+
+This is distinct from, and must not be merged with, the one-way ChatGPT draft receiver below.
+
+## Google Calendar preferences
+
+Synchronization is opt-in per category or scope rather than all-or-nothing. A user's calendar subscription preferences determine what is exported, and changing them must not retroactively delete platform-owned events.
+
 ## Failure policy
 
-Integration failures are visible and retryable. Core authorization does not fail open. A failed Calendar write leaves a marked platform event; a failed Classroom sync leaves last-known data with freshness status; a failed Matrix membership operation blocks or rolls back exposure and alerts an operator; a failed draft submission creates no partial published content.
+Integration failures are visible and retryable. Core authorization does not fail open. A failed Calendar write leaves a marked platform event; a failed Classroom sync leaves last-known data with freshness status; a failed Matrix membership operation blocks or rolls back exposure and alerts an operator; a failed draft submission creates no partial published content; a failed AI call returns the deterministic result unchanged.

@@ -1,0 +1,243 @@
+/*
+ * Design tokens.
+ *
+ * The single source of colour, spacing, typography, and motion for the platform.
+ * Product CSS references tokens and never hard-codes a colour, because that is what
+ * makes System/Light/Dark a token swap rather than a later retrofit.
+ *
+ * Appearance resolution, in order:
+ *   1. [data-appearance="light"|"dark"] on <html>, an explicit user choice.
+ *   2. prefers-color-scheme, the System default.
+ *   3. The light palette below.
+ *
+ * Nothing here is deployment-specific. Institution colours and logos are
+ * configuration and override the brand tokens at runtime.
+ */
+
+:root {
+  /* --------------------------------------------------------------------
+   * Typography
+   *
+   * Sizes use clamp() so text scales with the viewport between a readable
+   * floor and a sensible ceiling, and still respects the user's browser font
+   * size because the middle term is in rem.
+   * ------------------------------------------------------------------ */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", "SF Mono", Menlo,
+    Consolas, monospace;
+
+  --font-size-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --font-size-sm: clamp(0.875rem, 0.85rem + 0.15vw, 0.9375rem);
+  --font-size-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --font-size-lg: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
+  --font-size-xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);
+  --font-size-2xl: clamp(1.75rem, 1.5rem + 1.1vw, 2.25rem);
+  --font-size-3xl: clamp(2.125rem, 1.75rem + 1.8vw, 3rem);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.55;
+  --line-height-relaxed: 1.75;
+
+  /* --------------------------------------------------------------------
+   * Spacing: a 4px base scale.
+   * ------------------------------------------------------------------ */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* --------------------------------------------------------------------
+   * Sizing
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* Minimum interactive target. 44px is the smallest size that is reliably
+   * tappable; every button, link-as-button, and form control meets it, on
+   * pointer devices too, because a large target helps everyone. */
+  --target-min-size: 2.75rem;
+
+  --content-width-prose: 68ch;
+  --content-width-max: 80rem;
+
+  /* --------------------------------------------------------------------
+   * Motion
+   *
+   * Durations become 1ms rather than 0 under reduced motion, so transitionend
+   * still fires and JavaScript that waits for it does not hang.
+   * ------------------------------------------------------------------ */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0.2, 1);
+
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* --------------------------------------------------------------------
+   * Colour: light palette.
+   *
+   * Tokens are named by role, not by hue. A component asks for
+   * --color-text-muted, never for "grey 600", so a palette change is one edit
+   * here instead of a search across the codebase.
+   *
+   * Every text-on-surface pairing below is chosen to meet WCAG 2.2 AA contrast
+   * (4.5:1 for body text, 3:1 for large text and interface borders).
+   * ------------------------------------------------------------------ */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f7f8fa;
+  --color-surface-sunken: #eef0f4;
+  --color-surface-overlay: #ffffff;
+
+  --color-text: #16181d;
+  --color-text-muted: #5b6270;
+  --color-text-subtle: #6e7684;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #d6dae1;
+  --color-border-strong: #b3b9c4;
+
+  --color-accent: #1f5fbf;
+  --color-accent-hover: #184c99;
+  --color-accent-text: #ffffff;
+  --color-accent-subtle: #e8f0fc;
+
+  --color-success: #1a7f4b;
+  --color-success-subtle: #e6f4ec;
+  --color-warning: #8a5a00;
+  --color-warning-subtle: #fdf1dc;
+  --color-danger: #b3261e;
+  --color-danger-subtle: #fceceb;
+  --color-info: #1f5fbf;
+  --color-info-subtle: #e8f0fc;
+
+  /* Focus must be visible against every surface, so it is its own token rather
+   * than a reuse of the accent colour. */
+  --color-focus-ring: #0b57d0;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+
+  --shadow-sm: 0 1px 2px rgb(16 18 24 / 8%);
+  --shadow-md: 0 4px 12px rgb(16 18 24 / 10%);
+  --shadow-lg: 0 12px 32px rgb(16 18 24 / 14%);
+
+  color-scheme: light;
+}
+
+/*
+ * System appearance: dark, unless the user explicitly chose light.
+ * The :not() guard is what lets an explicit choice win over the OS setting.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-appearance="light"]) {
+    --color-surface: #14161a;
+    --color-surface-raised: #1c1f25;
+    --color-surface-sunken: #0e1014;
+    --color-surface-overlay: #21252c;
+
+    --color-text: #eef0f4;
+    --color-text-muted: #a8b0bd;
+    --color-text-subtle: #939cab;
+    --color-text-inverse: #14161a;
+
+    --color-border: #333944;
+    --color-border-strong: #4a515e;
+
+    /* Lightened rather than reused: the light-mode accent does not reach 4.5:1
+     * against a dark surface. */
+    --color-accent: #7ba9f0;
+    --color-accent-hover: #9bc0f7;
+    --color-accent-text: #0e1014;
+    --color-accent-subtle: #1b2942;
+
+    --color-success: #6ed49b;
+    --color-success-subtle: #16281f;
+    --color-warning: #e8b866;
+    --color-warning-subtle: #2b2114;
+    --color-danger: #f28b82;
+    --color-danger-subtle: #2e1a18;
+    --color-info: #7ba9f0;
+    --color-info-subtle: #1b2942;
+
+    --color-focus-ring: #9bc0f7;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 48%);
+    --shadow-lg: 0 12px 32px rgb(0 0 0 / 56%);
+
+    color-scheme: dark;
+  }
+}
+
+/* Explicit dark, chosen by the user regardless of the OS setting. */
+:root[data-appearance="dark"] {
+  --color-surface: #14161a;
+  --color-surface-raised: #1c1f25;
+  --color-surface-sunken: #0e1014;
+  --color-surface-overlay: #21252c;
+
+  --color-text: #eef0f4;
+  --color-text-muted: #a8b0bd;
+  --color-text-subtle: #939cab;
+  --color-text-inverse: #14161a;
+
+  --color-border: #333944;
+  --color-border-strong: #4a515e;
+
+  --color-accent: #7ba9f0;
+  --color-accent-hover: #9bc0f7;
+  --color-accent-text: #0e1014;
+  --color-accent-subtle: #1b2942;
+
+  --color-success: #6ed49b;
+  --color-success-subtle: #16281f;
+  --color-warning: #e8b866;
+  --color-warning-subtle: #2b2114;
+  --color-danger: #f28b82;
+  --color-danger-subtle: #2e1a18;
+  --color-info: #7ba9f0;
+  --color-info-subtle: #1b2942;
+
+  --color-focus-ring: #9bc0f7;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 48%);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 56%);
+
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-slow: 1ms;
+  }
+}
+
+/* Honour a user's request for more contrast rather than overriding it. */
+@media (prefers-contrast: more) {
+  :root {
+    --color-border: var(--color-border-strong);
+    --focus-ring-width: 4px;
+  }
+}

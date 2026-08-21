@@ -64,9 +64,51 @@ The platform is a privately operated digital home where an approved student comm
 - Do not claim E2EE until the selected Matrix deployment, SDK crypto path, device lifecycle, recovery, and verification UX pass the security gate.
 - Groups may be discoverable, private, or invite-only and may own resources, events, announcements, and one mapped Matrix room.
 
+### Device support and presentation
+
+- Support phones, tablets, laptops, and desktops as first-class targets. A desktop layout that merely shrinks is not acceptable.
+- Design responsively from content-driven breakpoints, supporting roughly 320px upward. Do not target named device models.
+- Provide touch-friendly hit targets, full keyboard navigation, visible focus states, scalable typography, sufficient contrast, and reduced-motion support.
+- Never assume a hover-capable pointer exists.
+- Provide responsive navigation, a mobile-usable admin portal, and a mobile-appropriate messaging layout.
+- Offer System, Light, and Dark appearance. Build the design system on tokens so appearance is not retrofitted.
+- Architect for installable web (PWA) readiness in v1. Full offline capability is not a v1 promise.
+
+### Personal study surfaces
+
+- Saved/bookmarked items and recently viewed items, scoped to the user.
+- Personal academic progress checklists and personal study tasks/reminders.
+- Curated resource collections that a user or a permitted curator can assemble.
+- An onboarding flow that introduces required steps, including the Classroom connection.
+- Individual user data export covering that user's own data.
+
+### Resource freshness and reporting
+
+- Every resource carries an explicit freshness state: `CURRENT`, `SUPERSEDED`, `ARCHIVED`, or `WITHDRAWN`.
+- Members can report a resource as broken or outdated. A report is a reviewable signal, never an automatic state change.
+
+### Device capability profiles
+
+- Record a per-installation capability profile to decide whether optional on-device work is viable.
+- Identify an installation with a randomly generated identifier. Do not perform invasive hardware fingerprinting.
+- Prefer measured performance over reported hardware names; browsers do not reliably expose exact CPU, RAM, GPU, or NPU details.
+- A profile is versioned, because hardware, browser, and benchmark changes invalidate earlier measurements.
+- Any heavy benchmarking requires user awareness and consent and must not run on every visit.
+
+### Student AI surfaces
+
+Three separate concepts, detailed in ADR 0003.
+
+- Quick AI: optional student-facing on-device assistance for summaries, explanations, note Q&A, revision points, flashcards, and simple quizzes. The platform must remain fully usable when it is unavailable.
+- Continue in ChatGPT: the platform authorizes, retrieves permitted academic context, deterministically prepares a source-marked prompt, and hands it to the student's clipboard alongside a new ChatGPT tab. The student pastes it into their own account.
+- Internal AI utility: server-side infrastructure only, never student-callable, and never a replacement for deterministic code and retrieval.
+
+No feature may send direct messages, message history, contact details, approval records, authentication material, or administrative records to an AI provider.
+
 ### Platform services
 
-- Provide an in-app notification center with privacy-safe message previews, user preferences, and reliable Classroom-connection reminders.
+- Provide an in-app notification center with privacy-safe message previews, granular per-category and per-channel preferences, and reliable Classroom-connection reminders.
+- Provide granular calendar subscription and synchronization preferences so a user chooses what is exported to Google Calendar.
 - Provide permission-filtered global search across resources, notes, notices, events, groups, and permitted user fields. Encrypted message search stays client-side/local where required by Matrix E2EE.
 - Provide a mobile-usable admin portal for approvals, roles/scopes, academics, content, groups/reports, integrations, configuration, system health, and audit.
 - Audit sensitive administrative and integration actions without logging secrets or message plaintext.
@@ -92,6 +134,13 @@ The platform is a privately operated digital home where an approved student comm
 - Password authentication, OTP verification, grade management, or Classroom assignment submission.
 - Building a messaging server, encryption protocol, live-call service, or video conferencing stack.
 - Automatic AI reading, summarization, or training on platform/member data.
+- Driving, automating, or using a student's own ChatGPT account as an API, and any bring-your-own-key arrangement.
+- Full offline operation.
+- Invasive device fingerprinting.
+
+## Feature freeze
+
+The v1 capability set in this document is frozen. Later ideas belong in a post-v1 backlog unless they close a genuine architectural or security hole.
 
 ## Product acceptance rules
 
@@ -101,3 +150,5 @@ The platform is a privately operated digital home where an approved student comm
 - Every imported or curated academic item has explainable provenance.
 - External integration failures degrade independently and visibly without corrupting platform-owned data.
 - Security claims match demonstrated behavior.
+- Every user-facing surface is verified at a narrow phone width, a tablet width, and a desktop width, by keyboard alone, and in both light and dark appearance.
+- No feature depends on AI availability. Removing every AI component must leave the platform functional.

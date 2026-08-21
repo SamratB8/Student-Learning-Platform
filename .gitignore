@@ -1,18 +1,39 @@
+# Secrets and local environment
 .env
 .env.*
 !.env.example
+secrets/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Node
 node_modules/
 .next/
 dist/
 build/
 coverage/
 .cache/
-*.log
-*.local
-.DS_Store
-Thumbs.db
+
+# Editors and OS
 .idea/
 .vscode/
+.DS_Store
+Thumbs.db
+
+# Local working files
+*.log
+*.local
 tmp/
 uploads/
-secrets/
