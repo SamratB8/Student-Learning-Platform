@@ -15,9 +15,9 @@ Except for the limited rights expressly granted below, all rights are reserved.
 
 For purposes of this Licence:
 
-**“Copyright Holder”** means Samrat Banerjee, or any lawful successor or assignee that owns the relevant rights in the Software.
+“Copyright Holder” means Samrat Banerjee, or any lawful successor or assignee that owns the relevant rights in the Software.
 
-**“Software”** means the Student Learning Platform and original project materials owned or controlled by the Copyright Holder, including, where applicable:
+“Software” means the Student Learning Platform and original project materials owned or controlled by the Copyright Holder, including, where applicable:
 
 - source code;
 - object code;
@@ -37,17 +37,17 @@ For purposes of this Licence:
 - build and deployment materials; and
 - other original materials distributed as part of the project.
 
-**“Repository”** means any source-code repository through which the Software is made available by or with the authority of the Copyright Holder.
+“Repository” means any source-code repository through which the Software is made available by or with the authority of the Copyright Holder.
 
-**“Evaluation”** means viewing, reading, inspecting, or analysing the Software solely to understand its design, assess its suitability, review its security or quality, consider whether to contribute to it, or undertake personal educational study, without operating the Software as a service or using it for productive purposes.
+“Evaluation” means viewing, reading, inspecting, or analysing the Software solely to understand its design, assess its suitability, review its security or quality, consider whether to contribute to it, or undertake personal educational study, without operating the Software as a service or using it for productive purposes.
 
-**“Production Use”** means use of the Software to provide, support, administer, automate, or facilitate any real-world service, organisation, institution, business process, educational operation, user community, or other non-testing activity.
+“Production Use” means use of the Software to provide, support, administer, automate, or facilitate any real-world service, organisation, institution, business process, educational operation, user community, or other non-testing activity.
 
-**“Commercial Use”** means use intended directly or indirectly to obtain revenue, commercial advantage, paid services, business benefit, cost avoidance, competitive advantage, or other economic benefit.
+“Commercial Use” means use intended directly or indirectly to obtain revenue, commercial advantage, paid services, business benefit, cost avoidance, competitive advantage, or other economic benefit.
 
-**“Derivative Work”** means a work based upon, adapted from, translated from, modified from, or incorporating protectable portions of the Software to an extent that applicable copyright law treats the resulting work as derivative.
+“Derivative Work” means a work based upon, adapted from, translated from, modified from, or incorporating protectable portions of the Software to an extent that applicable copyright law treats the resulting work as derivative.
 
-**“Separate Licence Agreement”** means an express written agreement granting additional rights in the Software and signed or otherwise validly executed by the Copyright Holder or an authorised rights holder.
+“Separate Licence Agreement” means an express written agreement granting additional rights in the Software and signed or otherwise validly executed by the Copyright Holder or an authorised rights holder.
 
 ---
 
@@ -389,7 +389,7 @@ Where no such separate agreement applies, this Licence controls.
 
 This document is:
 
-**Student Learning Platform Proprietary Source-Available License — Version 1.0**
+Student Learning Platform Proprietary Source-Available License — Version 1.0
 
 The Copyright Holder may publish future versions of this Licence.
 
@@ -421,4 +421,4 @@ No additional right exists unless and until it is expressly granted through a va
 
 ---
 
-**END OF LICENCE**
+END OF LICENCE
