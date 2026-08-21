@@ -37,3 +37,12 @@ Thumbs.db
 *.local
 tmp/
 uploads/
+
+# Vercel CLI state. `.vercel/` holds the project link, and the CLI writes
+# `.env.local` there and at the root containing a VERCEL_OIDC_TOKEN.
+#
+# The CLI appended a bare `.env*` here on first link. That is removed: it came after
+# the `!.env.example` negation above and silently re-ignored the example file, which
+# is committed on purpose. The rules at the top of this file already cover every
+# `.env` variant.
+.vercel/

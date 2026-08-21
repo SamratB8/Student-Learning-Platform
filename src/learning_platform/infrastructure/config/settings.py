@@ -12,6 +12,7 @@ settings object into a log line yields ``**********`` rather than a credential. 
 
 from __future__ import annotations
 
+import os
 import secrets
 from collections.abc import Mapping
 from enum import StrEnum
@@ -22,8 +23,16 @@ from pydantic import Field, SecretStr, ValidationError, field_validator, model_v
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from learning_platform.domain.errors import ConfigurationError
+from learning_platform.infrastructure.config.environments import AppEnvironment
+from learning_platform.infrastructure.config.hosting import resolve_app_environment
 
-__all__ = ["AppEnvironment", "LogFormat", "Settings", "load_settings"]
+__all__ = [
+    "AppEnvironment",
+    "LogFormat",
+    "Settings",
+    "load_hosted_settings",
+    "load_settings",
+]
 
 _MINIMUM_SECRET_KEY_LENGTH: Final = 32
 
@@ -44,24 +53,6 @@ _FORBIDDEN_SECRET_KEYS: Final[frozenset[str]] = frozenset(
 )
 
 _SUPPORTED_DATABASE_SCHEMES: Final[frozenset[str]] = frozenset({"postgresql", "postgresql+psycopg"})
-
-
-class AppEnvironment(StrEnum):
-    """Which deployment environment this process is running as."""
-
-    DEVELOPMENT = "development"
-    TEST = "test"
-    STAGING = "staging"
-    PRODUCTION = "production"
-
-    @property
-    def is_deployed(self) -> bool:
-        """Whether this environment is exposed beyond a developer's machine.
-
-        Staging is treated with production's strictness on purpose: a staging
-        environment holds real configuration and is reachable over the network.
-        """
-        return self in {AppEnvironment.STAGING, AppEnvironment.PRODUCTION}
 
 
 class LogFormat(StrEnum):
@@ -259,7 +250,18 @@ def load_settings(**overrides: Any) -> Settings:
     """Build settings from the environment.
 
     Raises:
-        ConfigurationError: if the environment is missing or invalid.
+        ConfigurationError: if the environment is missing, invalid, or hosted but
+            ambiguous.
+
+    The application environment is resolved before validation rather than left to the
+    field default. ``APP_ENV`` defaults to development, which is correct locally and
+    unsafe anywhere else, so :func:`resolve_app_environment` decides it from the
+    platform's own environment variables and fails closed when a hosted deployment
+    cannot be identified. See ``hosting.py`` for the rule.
+
+    An ``app_env`` passed in ``overrides`` is respected as-is. Overrides come from
+    calling code that stated the value deliberately, not from an environment that
+    might have omitted it, so there is no silent fallback to remove.
 
     Pydantic's validation error is translated into a domain error so callers depend
     on the domain vocabulary rather than on pydantic.
@@ -269,7 +271,43 @@ def load_settings(**overrides: Any) -> Settings:
     input, and for a model-level validator that input is the raw settings dict,
     before ``SecretStr`` wrapping. Formatting it would put the ``DATABASE_URL``
     password into the startup error and therefore into the logs.
+
+    The pydantic error is also suppressed from the exception chain with ``from None``.
+    Sanitising only the message is not enough: a chained ``__cause__`` is rendered in
+    full whenever a traceback is printed, and pydantic's own rendering of that cause
+    echoes each rejected value. This was observed on a real Vercel preview, where a
+    failed boot printed the partial contents of ``DATABASE_URL`` into the platform's
+    runtime logs. Nothing is lost by dropping the chain, because the rebuilt message
+    already names every offending variable and why it was rejected.
     """
+    return _build_settings(assume_hosted=False, overrides=overrides)
+
+
+def load_hosted_settings(**overrides: Any) -> Settings:
+    """Build settings for a process that is definitely a hosted deployment.
+
+    Raises:
+        ConfigurationError: if the environment cannot be identified as a specific
+            deployed environment.
+
+    Identical to :func:`load_settings` except that being hosted is asserted rather
+    than detected. The hosting entry point uses this, because the fact that the entry
+    point was imported at all proves a platform imported it.
+
+    This matters because every Vercel marker variable depends on the project's
+    "system environment variables" setting being enabled. Were it switched off, plain
+    detection would see no markers, conclude the process is local, and hand back
+    development defaults on a public URL. Asserting the fact removes that dependency.
+    """
+    return _build_settings(assume_hosted=True, overrides=overrides)
+
+
+def _build_settings(*, assume_hosted: bool, overrides: dict[str, Any]) -> Settings:
+    """Resolve the environment, then validate the whole configuration."""
+    if "app_env" not in overrides:
+        overrides = dict(overrides)
+        overrides["app_env"] = resolve_app_environment(os.environ, assume_hosted=assume_hosted)
+
     try:
         return Settings(**overrides)
     except ValidationError as exc:
@@ -277,7 +315,7 @@ def load_settings(**overrides: Any) -> Settings:
             _describe_validation_error(error)
             for error in exc.errors(include_input=False, include_url=False)
         )
-        raise ConfigurationError(f"Invalid application configuration: {problems}") from exc
+        raise ConfigurationError(f"Invalid application configuration: {problems}") from None
     except ValueError as exc:
         # A non-pydantic ValueError carries only what our own code put in it.
         raise ConfigurationError(f"Invalid application configuration: {exc}") from exc

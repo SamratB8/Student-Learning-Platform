@@ -14,6 +14,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 from pydantic import SecretStr
 
+from learning_platform.infrastructure.config.hosting import VERCEL_MARKER_VARIABLES
 from learning_platform.infrastructure.config.settings import AppEnvironment, Settings
 from learning_platform.web import create_app
 from learning_platform.web.extensions import get_extensions
@@ -27,6 +28,10 @@ def isolated_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     configuration tests are asserting, and results would differ between machines and
     CI. ``DATABASE_URL`` is deliberately not cleared here; integration tests need it,
     and they opt in explicitly.
+
+    Vercel marker variables are cleared too. They decide whether the application
+    considers itself hosted, so a shell that happens to define one would change what
+    every configuration test is asserting.
     """
     for name in (
         "APP_ENV",
@@ -35,6 +40,7 @@ def isolated_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         "SECRET_KEY",
         "LOG_LEVEL",
         "LOG_FORMAT",
+        *VERCEL_MARKER_VARIABLES,
     ):
         monkeypatch.delenv(name, raising=False)
 

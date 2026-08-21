@@ -12,6 +12,7 @@ as arguments.
 
 from __future__ import annotations
 
+import platform
 from typing import Any
 
 from flask import Flask
@@ -66,7 +67,16 @@ def create_app(settings: Settings | None = None, **overrides: Any) -> Flask:
     app.register_blueprint(health_blueprint)
 
     # Non-secret facts only. Settings.safe_summary never returns a secret value.
-    _logger.info("application.started", **resolved.safe_summary())
+    #
+    # The interpreter version is included because the runtime is chosen by the host
+    # rather than by this process, and a silent change of it is worth being able to
+    # see. It goes to the operator's log, never to an HTTP response: the health
+    # endpoints deliberately disclose no version information.
+    _logger.info(
+        "application.started",
+        python_version=platform.python_version(),
+        **resolved.safe_summary(),
+    )
 
     return app
 

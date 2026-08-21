@@ -11,6 +11,8 @@ partial disclosure through a truncated repr is caught, not just a whole-value on
 
 from __future__ import annotations
 
+import traceback
+
 import pytest
 
 from learning_platform.domain.errors import ConfigurationError
@@ -94,3 +96,67 @@ class TestConfigurationErrorLeakage:
             load_settings()
 
         assert "LOG_LEVEL" in str(error.value)
+
+
+class TestTracebackLeakage:
+    """The rendered traceback must be as clean as the message.
+
+    Sanitising ``str(exc)`` alone is not enough. A chained ``__cause__`` is printed in
+    full whenever a runtime renders a traceback, and pydantic's rendering of that
+    cause echoes every rejected value. This was observed on a real Vercel preview: a
+    failed boot printed part of ``DATABASE_URL`` into the platform's runtime logs.
+    """
+
+    def _rendered_traceback(self, monkeypatch: pytest.MonkeyPatch, **overrides: str) -> str:
+        """Render the traceback exactly as an unhandled exception would appear."""
+        _production_environment(monkeypatch, **overrides)
+        try:
+            load_settings()
+        except ConfigurationError as exc:
+            return "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        raise AssertionError("configuration was expected to be rejected")
+
+    def test_the_traceback_does_not_echo_the_database_password(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        rendered = self._rendered_traceback(monkeypatch)
+        assert PASSWORD_CANARY not in rendered
+
+    def test_the_traceback_does_not_echo_the_secret_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        rendered = self._rendered_traceback(monkeypatch)
+        assert SECRET_CANARY not in rendered
+
+    def test_no_fragment_of_the_password_survives_in_the_traceback(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Pydantic truncates the middle of a long value but keeps both ends."""
+        rendered = self._rendered_traceback(monkeypatch)
+        for length in range(4, len(PASSWORD_CANARY) + 1):
+            assert PASSWORD_CANARY[:length] not in rendered
+            assert PASSWORD_CANARY[-length:] not in rendered
+
+    def test_a_rejected_field_value_is_not_echoed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A field validator rejects this scheme, so the raw URL reaches the error."""
+        rendered = self._rendered_traceback(
+            monkeypatch, DATABASE_URL=f"mysql://user:{PASSWORD_CANARY}@127.0.0.1/db"
+        )
+        assert PASSWORD_CANARY not in rendered
+
+    def test_the_pydantic_cause_is_not_chained(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The mechanism behind the fix, pinned directly."""
+        _production_environment(monkeypatch)
+        with pytest.raises(ConfigurationError) as error:
+            load_settings()
+
+        assert error.value.__cause__ is None
+        assert error.value.__suppress_context__ is True
+
+    def test_the_traceback_still_names_the_offending_variables(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Suppressing the chain must not make a failed boot undiagnosable."""
+        rendered = self._rendered_traceback(monkeypatch, DATABASE_URL="", SECRET_KEY="")
+        assert "SECRET_KEY" in rendered
+        assert "DATABASE_URL" in rendered
