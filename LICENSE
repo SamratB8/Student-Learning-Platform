@@ -1,99 +1,424 @@
-STUDENT LEARNING PLATFORM PROPRIETARY SOFTWARE LICENSE
+# STUDENT LEARNING PLATFORM PROPRIETARY SOURCE-AVAILABLE LICENSE  
+## Version 1.0
 
-Copyright (c) 2026 Samrat Banerjee. All rights reserved.
+Copyright © 2026 Samrat Banerjee. All rights reserved.
 
-1. Ownership and reservation of rights
+This licence governs original materials in the Student Learning Platform repository and related distributions to the extent those materials are owned or controlled by the Copyright Holder.
 
-The Student Learning Platform, including its source code, object code,
-architecture, database schemas, migrations, application programming interfaces,
-configuration, documentation, tests, designs, user interfaces, text, and other
-original project materials (collectively, the "Software"), is proprietary.
+This is a proprietary licence. It is not an open-source licence, free-software licence, copyleft licence, or permissive software licence.
 
-The copyright owner reserves every right in the Software. Possession of, access
-to, or visibility of the Software does not grant any licence or permission.
+Except for the limited rights expressly granted below, all rights are reserved.
 
-2. No use without explicit written and signed permission
+---
 
-No person or entity may use the Software or exercise any right in it unless that
-person or entity can produce an explicit written permission document signed by
-the copyright owner who held the relevant rights when the permission was
-granted (a "Permission Document"). The Permission Document must identify the
-recipient, the Software or portion covered, the rights granted, the permitted
-purpose, and any duration or conditions.
+## 1. Definitions
 
-The recipient bears responsibility for retaining and producing verifiable proof
-of the Permission Document. Permission is limited strictly to the rights and
-scope stated in that document. Silence, delay, access to a repository, possession
-of a copy, payment of development or hosting expenses, contribution, testing,
-verbal discussion, or past tolerance does not create or imply permission.
+For purposes of this Licence:
 
-3. Prohibited acts
+**“Copyright Holder”** means Samrat Banerjee, or any lawful successor or assignee that owns the relevant rights in the Software.
 
-Without a valid Permission Document, no person or entity may, directly or
-indirectly:
+**“Software”** means the Student Learning Platform and original project materials owned or controlled by the Copyright Holder, including, where applicable:
 
-a. run, execute, access, host, deploy, operate, or otherwise use the Software;
-b. copy, reproduce, download, clone, mirror, archive, or store the Software;
-c. modify, adapt, translate, arrange, refactor, or create derivative works;
-d. reverse engineer, decompile, disassemble, or attempt to discover source code,
-   algorithms, architecture, or non-public interfaces;
-e. publish, display, disclose, transmit, distribute, sell, sublicense, lease,
-   lend, assign, transfer, or make the Software available to another person;
-f. use the Software or its non-public materials to build, train, evaluate, or
-   improve another product, service, model, dataset, or system;
-g. remove, hide, or change any copyright, ownership, attribution, confidentiality,
-   or licence notice; or
-h. permit, assist, or enable another person to do any prohibited act.
+- source code;
+- object code;
+- scripts;
+- database schemas;
+- migrations;
+- application programming interfaces;
+- configuration;
+- documentation;
+- tests;
+- architecture descriptions;
+- user-interface implementations;
+- stylesheets;
+- designs;
+- original graphics and branding assets;
+- project-specific datasets or structured content;
+- build and deployment materials; and
+- other original materials distributed as part of the project.
 
-4. No implied, oral, or unsigned licence
+**“Repository”** means any source-code repository through which the Software is made available by or with the authority of the Copyright Holder.
 
-All permissions must be explicit, written, and signed. No implied licence,
-estoppel-based permission, oral permission, unsigned approval, or licence by
-conduct is granted by this file. Repository access or collaboration access is
-provided solely for the limited purpose, if any, stated in a valid Permission
-Document.
+**“Evaluation”** means viewing, reading, inspecting, or analysing the Software solely to understand its design, assess its suitability, review its security or quality, consider whether to contribute to it, or undertake personal educational study, without operating the Software as a service or using it for productive purposes.
 
-5. Transfers of ownership and existing permissions
+**“Production Use”** means use of the Software to provide, support, administer, automate, or facilitate any real-world service, organisation, institution, business process, educational operation, user community, or other non-testing activity.
 
-If ownership of any right in the Software is transferred, the new owner controls
-future permissions for the transferred right. A previously granted Permission
-Document continues only to the extent its terms and applicable law make it
-effective after that transfer. No ownership transfer itself grants a licence to
-any third party.
+**“Commercial Use”** means use intended directly or indirectly to obtain revenue, commercial advantage, paid services, business benefit, cost avoidance, competitive advantage, or other economic benefit.
 
-6. Third-party materials
+**“Derivative Work”** means a work based upon, adapted from, translated from, modified from, or incorporating protectable portions of the Software to an extent that applicable copyright law treats the resulting work as derivative.
 
-Third-party software, libraries, fonts, media, or other materials remain governed
-by their respective terms. This licence applies only to rights the copyright
-owner is legally entitled to license and does not restrict rights that cannot
-lawfully be restricted.
+**“Separate Licence Agreement”** means an express written agreement granting additional rights in the Software and signed or otherwise validly executed by the Copyright Holder or an authorised rights holder.
 
-7. Statutory exceptions
+---
 
-Nothing in this licence excludes a use that applicable law expressly permits
-and does not allow the copyright owner to prohibit or waive. Any person relying
-on such an exception is responsible for establishing that it applies.
+## 2. Ownership and Reservation of Rights
 
-8. No warranty
+The Software is proprietary.
 
-THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTY OF ANY
-KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, SECURITY, AVAILABILITY, OR
-CORRECTNESS.
+All copyright, intellectual-property rights, title, and interests in the Software remain with the Copyright Holder or other applicable rights holders.
 
-9. Limitation of liability
+Making the Software visible, publicly accessible, downloadable, inspectable, or available in a Repository does not place the Software in the public domain and does not grant any licence except as expressly stated in this Licence or as unavoidably granted under the applicable terms of the hosting platform.
 
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE COPYRIGHT OWNER AND CONTRIBUTORS
-WILL NOT BE LIABLE FOR ANY CLAIM, LOSS, DAMAGE, OR OTHER LIABILITY ARISING FROM
-OR RELATED TO THE SOFTWARE OR ITS USE, WHETHER IN CONTRACT, TORT, OR OTHERWISE.
+No rights are granted by implication, estoppel, custom, conduct, silence, delay, contribution, payment of expenses, collaboration, possession of a copy, or prior tolerance.
 
-10. Enforcement and severability
+All rights not expressly granted are reserved.
 
-Any unauthorized act may result in termination of access and pursuit of remedies
-available under applicable law. If any provision is held invalid or
-unenforceable, the remaining provisions continue in effect to the maximum
-extent permitted by law.
+---
 
-For permission, obtain a separate Permission Document signed by the current
-copyright owner. Do not treat repository access, an issue, a pull request, or an
-informal message as permission.
+## 3. Limited Source Inspection and Evaluation Licence
+
+Subject to full compliance with this Licence, the Copyright Holder grants each recipient a limited, non-exclusive, non-transferable, non-sublicensable licence solely to:
+
+1. view and read the Software;
+2. inspect and evaluate the Software for personal, educational, security-review, technical-review, or contribution-evaluation purposes;
+3. make such temporary or incidental copies as are technically necessary to exercise the foregoing rights lawfully; and
+4. use repository-hosting functionality to the extent necessarily authorised by the terms of the platform on which the Repository is hosted.
+
+Where a public repository-hosting platform independently grants users rights to view, display, reproduce, or fork content through that platform, this Licence does not purport to revoke rights that the Copyright Holder has separately and validly granted through acceptance of that platform’s governing terms.
+
+No broader permission is granted.
+
+In particular, this Section does not authorise Production Use, deployment, hosting, redistribution, modification for actual use, commercial exploitation, or operation of the Software as a service.
+
+---
+
+## 4. Rights Not Granted
+
+Unless authorised by a Separate Licence Agreement or mandatory law, this Licence does not grant any right to:
+
+- run the Software for Production Use;
+- operate the Software for an institution, organisation, company, community, or third party;
+- deploy or host the Software publicly or privately for productive purposes;
+- offer the Software as software-as-a-service or a hosted service;
+- make Commercial Use of the Software;
+- modify or adapt the Software for operational use;
+- create or distribute Derivative Works;
+- redistribute the Software outside the limited functionality necessarily provided by the Repository host;
+- sublicense the Software;
+- sell, lease, rent, assign, transfer, or commercially exploit the Software;
+- incorporate substantial protectable portions of the Software into another product or service;
+- use the Software to create a competing or substitute platform;
+- make the Software available to third parties as part of another service;
+- remove or falsify ownership, copyright, licensing, attribution, or provenance notices; or
+- represent an unauthorised version as official, endorsed, sponsored, or maintained by the Copyright Holder.
+
+---
+
+## 5. Prohibited Uses
+
+Except where expressly permitted by applicable law or a Separate Licence Agreement, no person or entity may directly or indirectly:
+
+### 5.1 Deployment and operation
+
+Run, host, deploy, operate, maintain, or administer the Software for Production Use.
+
+### 5.2 Commercial exploitation
+
+Use the Software for Commercial Use or in connection with paid services, commercial operations, revenue-generating activities, business infrastructure, or commercial products.
+
+### 5.3 Unauthorised derivative development
+
+Modify, adapt, translate, restructure, repackage, port, or otherwise create a Derivative Work for distribution or productive use.
+
+### 5.4 Redistribution
+
+Publish, transmit, distribute, mirror, republish, sublicense, sell, lease, or otherwise make copies of the Software available outside rights necessarily exercised through the authorised Repository-hosting platform.
+
+### 5.5 Competitive replication
+
+Use substantial protectable portions of the Software, its implementation, or its original project materials to create or operate a substantially derived competing or substitute service.
+
+Nothing in this paragraph restricts independent development that does not infringe copyright or other applicable rights.
+
+### 5.6 Removal of notices
+
+Remove, conceal, falsify, or materially alter copyright, licence, provenance, trademark, or ownership notices.
+
+### 5.7 Circumvention
+
+Circumvent technological or contractual restrictions imposed to protect the Software or gain access to non-public portions of the Software without authorisation.
+
+### 5.8 Assistance
+
+Knowingly enable, procure, direct, or materially assist another person to perform an act prohibited by this Licence.
+
+---
+
+## 6. Artificial Intelligence, Machine Learning, and Automated Exploitation
+
+Except under a Separate Licence Agreement or to the extent mandatory law prevents restriction, the Software may not be systematically collected, scraped, ingested, reproduced, or processed for the principal purpose of:
+
+- training an artificial-intelligence or machine-learning model;
+- fine-tuning model weights;
+- creating training, validation, evaluation, or benchmark datasets;
+- improving code-generation models through model training;
+- creating embeddings or derived datasets intended for model training or commercial model development;
+- reconstructing or learning substantial implementation details for automated reproduction of the Software; or
+- creating an automated system primarily intended to replicate substantial protectable portions of the Software.
+
+This Section does not by itself prohibit a person from using ordinary development or accessibility tools merely to inspect small portions of the Software for a permitted Evaluation purpose, provided such use does not create or contribute to a training dataset, model, competing implementation, or prohibited derivative exploitation.
+
+Rights separately granted to a Repository-hosting provider under that provider’s governing terms are unaffected to the extent the Copyright Holder has validly granted those rights.
+
+---
+
+## 7. Separate Licence Agreements and Permissions
+
+Additional rights may be granted only through a Separate Licence Agreement.
+
+A Separate Licence Agreement may grant rights including, for example:
+
+- institutional deployment;
+- academic use;
+- internal organisational use;
+- commercial use;
+- hosting rights;
+- modification rights;
+- redistribution rights;
+- white-label rights;
+- integration rights; or
+- other specifically negotiated permissions.
+
+Any such agreement controls over this Licence only to the extent it expressly grants different or additional rights.
+
+No email, issue, pull request, chat message, verbal statement, informal approval, repository invitation, access permission, or course of conduct constitutes a Separate Licence Agreement unless it satisfies the requirements expressly stated by the Copyright Holder and applicable law.
+
+---
+
+## 8. Contributions
+
+Submission of a contribution does not, by itself, transfer ownership of the contributor’s copyright to the Copyright Holder.
+
+Any contribution accepted into the project is subject to:
+
+1. the contributor’s obligation to have the legal right to submit it;
+2. the licence terms applicable to contributions at the time of submission; and
+3. any separate Contributor Licence Agreement, copyright assignment agreement, Developer Certificate of Origin requirement, or other contribution policy adopted by the project.
+
+The Copyright Holder may require a separate written contributor agreement before accepting any contribution.
+
+Nothing in this Licence should be interpreted as a copyright assignment by a contributor where applicable law requires a separate written or signed assignment instrument.
+
+---
+
+## 9. Third-Party Materials
+
+The Software may depend upon, link to, interoperate with, bundle, reference, or include third-party software, libraries, frameworks, fonts, media, documentation, APIs, or other materials.
+
+Those third-party materials remain governed by their respective licences, terms, and rights.
+
+This Licence applies only to materials and rights that the Copyright Holder is legally entitled to license.
+
+Nothing in this Licence:
+
+- claims ownership of third-party materials;
+- overrides a third-party licence;
+- removes rights granted directly by a third-party rights holder; or
+- imposes proprietary restrictions on third-party material where the Copyright Holder lacks authority to do so.
+
+Where required, applicable third-party notices and licence texts must be preserved.
+
+---
+
+## 10. Branding, Names, and Trademarks
+
+No licence to any trademark, service mark, trade name, logo, icon, brand identity, project identity, or distinctive branding is granted except to the extent necessary for permitted factual reference to the Software.
+
+Without express written permission, no person may use project branding in a manner likely to suggest that an unauthorised version, fork, service, organisation, product, or deployment is official, approved, sponsored, operated, or endorsed by the Copyright Holder.
+
+This Section does not prevent nominative or other legally permitted trademark use.
+
+A separate trademark policy may supplement this Section.
+
+---
+
+## 11. Security Research
+
+Good-faith security review performed solely within the rights granted by Section 3 is permitted.
+
+This Licence does not grant permission to:
+
+- attack production systems;
+- access accounts, information, infrastructure, or services without authorisation;
+- bypass authentication or authorisation controls on deployed systems;
+- access personal or confidential information;
+- disrupt services;
+- exploit discovered vulnerabilities; or
+- conduct testing against infrastructure not owned by the researcher unless separately authorised.
+
+Security research involving a deployed service must comply with the project’s applicable security policy or separate written authorisation.
+
+---
+
+## 12. Statutory Rights and Mandatory Exceptions
+
+Nothing in this Licence restricts, excludes, or requires waiver of any right, exception, defence, limitation, or permitted use that applicable law makes mandatory or prevents the Copyright Holder from excluding.
+
+Any person relying upon a statutory exception remains responsible for determining and, where required, establishing that the exception applies.
+
+---
+
+## 13. Termination
+
+The rights granted under this Licence automatically terminate upon a material breach of this Licence.
+
+Following termination, the recipient must cease all activity that depended upon the terminated licence rights.
+
+Termination does not:
+
+- extinguish rights or remedies arising from a prior breach;
+- waive claims for copyright infringement or other unlawful acts;
+- invalidate provisions that by their nature should survive termination; or
+- affect rights granted independently by mandatory law or by a separate agreement that remains effective.
+
+Sections concerning ownership, prohibited exploitation, third-party rights, disclaimers, limitation of liability, enforcement, governing law, and other provisions intended to survive shall remain effective after termination.
+
+The Copyright Holder may provide written reinstatement at the Copyright Holder’s discretion.
+
+---
+
+## 14. Enforcement and Remedies
+
+Unauthorised use may constitute breach of this Licence, copyright infringement, trademark infringement, misappropriation, or another violation of applicable law depending on the circumstances.
+
+The Copyright Holder reserves the right to pursue any remedy available under applicable law, including where appropriate:
+
+- injunctive relief;
+- cessation of unauthorised use;
+- removal or disabling of infringing material;
+- damages;
+- accounts of profits;
+- recovery of costs where available; and
+- other legal or equitable remedies.
+
+Nothing in this Licence guarantees that any particular remedy will be available in any jurisdiction.
+
+Failure or delay by the Copyright Holder to enforce a provision does not automatically waive the right to enforce that provision later.
+
+---
+
+## 15. No Warranty
+
+THE SOFTWARE IS PROVIDED “AS IS” AND “AS AVAILABLE”.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER AND CONTRIBUTORS DISCLAIM ALL WARRANTIES, EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WARRANTIES OF:
+
+- MERCHANTABILITY;
+- FITNESS FOR A PARTICULAR PURPOSE;
+- TITLE;
+- NON-INFRINGEMENT;
+- SECURITY;
+- RELIABILITY;
+- ACCURACY;
+- AVAILABILITY;
+- PERFORMANCE;
+- COMPATIBILITY; AND
+- FREEDOM FROM DEFECTS OR VULNERABILITIES.
+
+NO INFORMATION OR COMMUNICATION CREATES A WARRANTY UNLESS EXPRESSLY STATED IN A SEPARATE WRITTEN AGREEMENT.
+
+---
+
+## 16. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER AND CONTRIBUTORS SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR OTHER LOSS, DAMAGE, COST, OR LIABILITY ARISING OUT OF OR RELATED TO:
+
+- THE SOFTWARE;
+- ACCESS TO THE SOFTWARE;
+- INABILITY TO ACCESS OR USE THE SOFTWARE;
+- SECURITY DEFECTS;
+- DATA LOSS;
+- SERVICE INTERRUPTION;
+- RELIANCE UPON THE SOFTWARE;
+- UNAUTHORISED MODIFICATION OR USE; OR
+- ANY OTHER MATTER RELATING TO THE SOFTWARE.
+
+THIS LIMITATION APPLIES REGARDLESS OF THE THEORY OF LIABILITY, TO THE EXTENT PERMITTED BY LAW.
+
+Nothing in this Section excludes liability that applicable law does not permit to be excluded or limited.
+
+---
+
+## 17. Governing Law
+
+Subject to any mandatory law that applies regardless of contractual choice, this Licence shall be governed by and construed in accordance with the laws of India.
+
+Conflict-of-law principles shall apply only to the extent they cannot lawfully be excluded.
+
+---
+
+## 18. Jurisdiction
+
+Subject to applicable mandatory jurisdictional rules, disputes arising directly out of this Licence shall be subject to the jurisdiction of courts of competent jurisdiction in Kolkata, West Bengal, India.
+
+Nothing in this Section prevents the Copyright Holder from seeking urgent, interim, injunctive, protective, or equivalent relief in another competent jurisdiction where such relief is necessary to protect intellectual-property rights or prevent continuing harm.
+
+---
+
+## 19. Severability
+
+If any provision of this Licence is held invalid, unlawful, or unenforceable, that provision shall be interpreted, limited, or severed to the minimum extent necessary, and the remaining provisions shall continue in effect to the maximum extent permitted by law.
+
+---
+
+## 20. No Waiver
+
+Failure, delay, tolerance, or partial enforcement by the Copyright Holder does not constitute a waiver of any right or provision.
+
+A waiver is effective only to the extent expressly stated by the person legally authorised to grant it.
+
+---
+
+## 21. No Agency, Partnership, or Endorsement
+
+Access to or use of the Software does not create an employment relationship, partnership, joint venture, fiduciary relationship, agency, sponsorship, endorsement, franchise, or other legal relationship between the Copyright Holder and the recipient.
+
+---
+
+## 22. Entire Licence and Relationship to Other Agreements
+
+This Licence states the default rights granted by the Copyright Holder in relation to the Software.
+
+A valid Separate Licence Agreement, Contributor Licence Agreement, assignment, commercial agreement, institutional agreement, or other written agreement may supplement or supersede specified provisions of this Licence according to its terms.
+
+Where no such separate agreement applies, this Licence controls.
+
+---
+
+## 23. Licence Version
+
+This document is:
+
+**Student Learning Platform Proprietary Source-Available License — Version 1.0**
+
+The Copyright Holder may publish future versions of this Licence.
+
+Publication of a later version does not automatically relicense a copy of the Software already distributed under an earlier version unless the applicable licence notice expressly permits use of later versions.
+
+---
+
+## 24. Per-File Licence Identification
+
+Where source files use SPDX-style metadata, the following custom identifier may be used:
+
+`SPDX-License-Identifier: LicenseRef-Student-Learning-Platform-Proprietary-1.0`
+
+Where appropriate, a corresponding copyright notice may be used:
+
+`SPDX-FileCopyrightText: 2026 Samrat Banerjee`
+
+Such metadata identifies the applicable licence; it does not grant rights beyond this Licence.
+
+---
+
+## 25. Licensing Contact
+
+Requests for rights beyond the limited Evaluation rights granted by this Licence must be made through an official licensing contact or other channel designated by the Copyright Holder.
+
+A request does not create permission.
+
+No additional right exists unless and until it is expressly granted through a valid Separate Licence Agreement.
+
+---
+
+**END OF LICENCE**
