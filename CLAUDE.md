@@ -8,7 +8,7 @@ This software is privately owned and institution-neutral. CTS is the first deplo
 
 ## Current phase
 
-Phase 1A (runnable foundation) is complete. Phase 1B is the remaining foundation work. Do not jump ahead to user-facing product features.
+Phase 1A (runnable foundation) is complete. Phase 1B is in progress: durable background work is done, and object storage, CI, staging separation, the academic hierarchy seed, and the deployment configuration loader remain. Do not jump ahead to user-facing product features.
 
 The v1 feature set is frozen. New ideas belong in a post-v1 backlog unless they close a genuine architectural or security hole.
 
@@ -24,7 +24,8 @@ The v1 feature set is frozen. New ideas belong in a post-v1 backlog unless they 
 - Permission-filtered global search; E2EE message plaintext is not server-indexed.
 - Mobile-usable admin, in-app notifications, security audit trail, archive/export, and a clean BTech transition.
 - ChatGPT integration is one-way draft ingestion. It cannot read, publish, update arbitrary records, delete, or administer. Never automatically send member data to AI.
-- Production web hosting is Vercel (ADR 0002). No always-running colocated worker, no reliance on process lifetime, no local filesystem persistence. Background runtime is deferred to ADR 0004.
+- Production web hosting is Vercel (ADR 0002). No always-running colocated worker, no reliance on process lifetime, no local filesystem persistence.
+- Background work is a durable `task_dispatch` row in PostgreSQL, written in the same transaction as the change that owes it (ADR 0004). The row is the system of record; a queue, scheduler, or message never is. Delivery is at-least-once and replaceable behind a port that names no transport. Task types resolve only through an explicit registry, so a stored task type can never select unregistered code. Handlers are idempotent, carry internal identifiers only, and revalidate authorization at execution time. Inline execution is refused in a deployed environment.
 - Three separate AI concepts (ADR 0003): on-device Quick AI, the clipboard-based Continue in ChatGPT handoff, and the server-only internal AI utility. AI complements deterministic code and retrieval; it never replaces them, and the platform stays fully functional without it. No BYOK, no automating a user's ChatGPT account.
 - Responsive support for phone, tablet, laptop, and desktop from roughly 320px up, with keyboard access, visible focus, contrast, reduced motion, and System/Light/Dark appearance built on design tokens. PWA-ready architecture; full offline is not a v1 promise.
 - Device capability profiles use a random, revocable installation identifier, never invasive fingerprinting, and never influence authorization.

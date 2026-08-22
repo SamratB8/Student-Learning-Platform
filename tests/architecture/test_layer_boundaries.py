@@ -42,8 +42,40 @@ ALLOWED_INTERNAL_IMPORTS: dict[str, frozenset[str]] = {
     "web": frozenset({"domain", "application", "infrastructure", "integrations", "worker", "web"}),
 }
 
+# Background-runtime and provider SDKs. ADR 0004 selected a delivery mechanism and
+# expects to be able to change it, which is only true while no inner layer names one.
+# The moment a task handler imports a queue client, swapping runtimes stops being a
+# configuration change and becomes a rewrite.
+VENDOR_PACKAGES = frozenset(
+    {
+        "vercel",
+        "vercel_queue",
+        "celery",
+        "kombu",
+        "redis",
+        "rq",
+        "dramatiq",
+        "pika",
+        "boto3",
+        "botocore",
+        "googleapiclient",
+        "google",
+        "matrix",
+        "nio",
+        "httpx",
+        "requests",
+    }
+)
+
 # Layers that must stay free of any framework import.
-FRAMEWORK_FREE_LAYERS = frozenset({"domain", "application"})
+#
+# ``worker`` is included from Phase 1B onwards. A handler that imports a framework or
+# a driver can only run wherever that dependency is available, which defeats the
+# point of handlers being callable by whatever ADR 0004 selects.
+FRAMEWORK_FREE_LAYERS = frozenset({"domain", "application", "worker"})
+
+# Layers that must additionally name no vendor SDK at all.
+VENDOR_FREE_LAYERS = frozenset({"domain", "application", "worker"})
 
 
 def _python_files(layer: str) -> list[Path]:
@@ -110,6 +142,54 @@ class TestFrameworkIndependence:
         assert not violations, f"the {layer} layer must stay framework-neutral: " + "; ".join(
             violations
         )
+
+
+class TestVendorIndependence:
+    """No inner layer may name a queue, broker, or provider SDK.
+
+    This is what makes ADR 0004's runtime replaceable rather than merely described as
+    replaceable. Provider adapters belong in ``infrastructure`` and ``integrations``,
+    behind a port.
+    """
+
+    @pytest.mark.parametrize("layer", sorted(VENDOR_FREE_LAYERS))
+    def test_inner_layers_name_no_vendor_sdk(self, layer: str) -> None:
+        files = _python_files(layer)
+        assert files, f"the {layer} layer has no source files to check"
+
+        violations: list[str] = []
+        for path in files:
+            for module in _imported_modules(path):
+                root = module.split(".")[0]
+                if root in VENDOR_PACKAGES:
+                    violations.append(f"{path.relative_to(SOURCE_ROOT.parent)} imports {module}")
+        assert not violations, (
+            f"the {layer} layer must not depend on a provider or queue SDK: "
+            + "; ".join(violations)
+        )
+
+    def test_the_dispatch_port_exposes_no_transport_concept(self) -> None:
+        """The port's whole value is that a caller cannot discover the runtime.
+
+        Checked against the signature rather than the source text, because the module
+        docstring names a topic and a cron expression on purpose, to say they are
+        absent. Adding a ``topic`` or ``queue`` argument would fail this.
+        """
+        import inspect
+
+        from learning_platform.application.ports.task_dispatcher import TaskDispatcher
+
+        parameters = set(inspect.signature(TaskDispatcher.dispatch).parameters)
+        assert parameters == {
+            "self",
+            "task_type",
+            "payload",
+            "payload_version",
+            "idempotency_key",
+            "available_at",
+            "correlation_id",
+            "max_attempts",
+        }
 
 
 class TestInternalDependencyDirection:

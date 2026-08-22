@@ -1,77 +1,120 @@
-"""Inline task dispatch: runs the handler immediately, in the caller.
+"""Inline dispatch: runs the handler immediately, in the caller.
 
-This is the development and test implementation, and it is deliberately the only one
-that exists while ADR 0004 is open. It gives the port a real implementation so the
-seam is exercised, without committing the project to a queue.
+This exists for tests and for local experimentation, and it refuses to exist anywhere
+else. Constructing it in a deployed environment raises, rather than logging a warning
+and carrying on, because the failure it prevents is silent: inline execution ties a
+user's request to the task's latency, offers no retry, has no durable record, and
+loses everything in flight when the process ends. A deployment that quietly fell back
+to it would look like it was working right up until work started disappearing.
 
-It is not a production strategy. Inline execution ties the caller's latency to the
-task, offers no retry, and dies with the process. Any workload that could exceed a
-request timeout must wait for ADR 0004 rather than lean on this.
+That guard mirrors the hosted-environment rule in ``infrastructure/config/hosting.py``
+and exists for the same reason: the weakest behaviour must not also be the quietest.
+
+Inline dispatch is not the outbox. It does not participate in a transaction, so work
+dispatched inside a use case that later rolls back has already happened.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from datetime import datetime
 
-from learning_platform.application.ports.task_dispatcher import (
-    TaskName,
+from learning_platform.application.ports.task_dispatcher import DispatchReceipt
+from learning_platform.application.tasks.registry import TaskContext, TaskRegistry
+from learning_platform.domain.errors import ConfigurationError
+from learning_platform.domain.identifiers import InternalId, new_internal_id
+from learning_platform.domain.tasks import (
     TaskPayload,
+    TaskType,
     validate_task_payload,
 )
-from learning_platform.domain.errors import InvariantViolation
+from learning_platform.infrastructure.config.environments import AppEnvironment
 from learning_platform.infrastructure.observability.logging import get_logger
 
-__all__ = ["InlineTaskDispatcher", "TaskHandler"]
-
-type TaskHandler = Callable[[TaskPayload], None]
+__all__ = ["InlineTaskDispatcher"]
 
 _logger = get_logger(__name__)
 
 
 class InlineTaskDispatcher:
-    """Executes registered handlers synchronously.
+    """Executes registered handlers synchronously, in development and tests only.
 
     Implements ``application.ports.task_dispatcher.TaskDispatcher``.
     """
 
-    def __init__(self, *, strict: bool = True) -> None:
+    def __init__(
+        self,
+        registry: TaskRegistry,
+        *,
+        environment: AppEnvironment = AppEnvironment.TEST,
+    ) -> None:
         """
         Args:
-            strict: whether dispatching an unregistered task name is an error.
-                True in development and tests, so a typo in a task name surfaces
-                immediately rather than becoming silently dropped work.
-        """
-        self._handlers: dict[str, TaskHandler] = {}
-        self._strict = strict
-
-    def register(self, name: TaskName, handler: TaskHandler) -> None:
-        """Bind a handler to a task name.
+            environment: the environment this dispatcher would run in.
 
         Raises:
-            InvariantViolation: if the name is already registered. Silently replacing
-                a handler would make dispatch depend on import order.
+            ConfigurationError: if ``environment`` is a deployed one. Required rather
+                than defaulted to permissive, so selecting inline execution in
+                staging or production is impossible rather than merely discouraged.
         """
-        if name in self._handlers:
-            raise InvariantViolation(f"task {name!r} already has a handler")
-        self._handlers[name] = handler
+        if environment.is_deployed:
+            raise ConfigurationError(
+                "inline task dispatch runs work inside the request that asked for it, "
+                "with no durability and no retry, and is refused in a deployed "
+                "environment. Use the durable dispatcher (ADR 0004)."
+            )
+        self._registry = registry
+        self._environment = environment
+        self._seen_keys: set[str] = set()
 
-    def dispatch(self, name: TaskName, payload: TaskPayload) -> None:
-        """Run the handler for ``name`` immediately."""
+    def dispatch(
+        self,
+        task_type: TaskType,
+        payload: TaskPayload,
+        *,
+        payload_version: int = 1,
+        idempotency_key: str | None = None,
+        available_at: datetime | None = None,
+        correlation_id: str | None = None,
+        max_attempts: int | None = None,
+    ) -> DispatchReceipt:
+        """Run the handler for ``task_type`` immediately.
+
+        ``available_at`` is honoured only in the sense that it is ignored: there is no
+        scheduler here, so a delayed task runs now. That difference from the durable
+        dispatcher is why this is unsuitable for anything but a test.
+
+        A repeated ``idempotency_key`` is dropped without running the handler,
+        matching the durable dispatcher closely enough that a test can exercise the
+        deduplicating branch of a use case.
+        """
         validate_task_payload(payload)
+        task_id = new_internal_id()
 
-        handler = self._handlers.get(name)
-        if handler is None:
-            if self._strict:
-                raise InvariantViolation(f"no handler registered for task {name!r}")
-            _logger.warning("task.unhandled", task_name=str(name))
-            return
+        if idempotency_key is not None:
+            if idempotency_key in self._seen_keys:
+                return DispatchReceipt(task_id=task_id, deduplicated=True)
+            self._seen_keys.add(idempotency_key)
 
-        _logger.info("task.started", task_name=str(name))
+        handler = self._registry.resolve(task_type, payload_version)
+
+        _logger.info("task.started", task_id=str(task_id), task_type=str(task_type), attempt=1)
         try:
-            handler(payload)
+            handler(
+                TaskContext(
+                    task_id=task_id,
+                    task_type=task_type,
+                    payload=payload,
+                    payload_version=payload_version,
+                    attempt=1,
+                    max_attempts=max_attempts or 1,
+                    correlation_id=correlation_id,
+                )
+            )
         except Exception:
-            # Logged with the task name and re-raised. Inline dispatch has no retry
-            # and no dead-letter state, so the caller must see the failure.
-            _logger.exception("task.failed", task_name=str(name))
+            # Re-raised, not recorded. There is no durable row to mark failed and no
+            # retry to schedule, so the caller must see the failure or it is lost.
+            _logger.exception("task.failed", task_id=str(task_id), task_type=str(task_type))
             raise
-        _logger.info("task.completed", task_name=str(name))
+
+        _logger.info("task.finished", task_id=str(task_id), task_type=str(task_type))
+        return DispatchReceipt(task_id=InternalId(task_id), deduplicated=False)

@@ -34,7 +34,11 @@ No product features. Deliberately excluded: OAuth, RBAC behavior, Classroom, res
 
 ### Phase 1B - Remaining foundation
 
-Object storage adapter, the outbox, the durable task dispatch record, CI, staging separation, the academic hierarchy seed, and the CTS deployment configuration loader. ADR 0004 must be decided before any job that cannot complete inside one request.
+Durable background work, the object storage adapter, CI, staging separation, the academic hierarchy seed, and the CTS deployment configuration loader.
+
+The background half is complete. ADR 0004 is accepted: a `task_dispatch` table in PostgreSQL is the durable system of record and the transactional outbox, delivery is a replaceable adapter, and reconciliation falls out of lease expiry rather than needing a scheduler of its own. The blocker on features that need work outliving a request is lifted, subject to the deployment actions listed in that ADR.
+
+Still outstanding in Phase 1B: object storage, CI, staging separation, the academic hierarchy seed, and the deployment configuration loader.
 
 ## Phase 2 - Google identity and manual approval
 

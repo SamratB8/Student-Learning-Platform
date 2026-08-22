@@ -77,12 +77,32 @@ class TestEntrypointStaysThin:
     """The adapter is a hosting seam, not a place for application logic."""
 
     def test_it_registers_no_routes_of_its_own(self, wsgi_module: ModuleType) -> None:
-        rules = {rule.rule for rule in wsgi_module.app.url_map.iter_rules()}
-        assert "/healthz" in rules
-        assert "/readyz" in rules
-        # Only the health blueprint and Flask's own static rule exist. A route added
-        # here rather than in a blueprint would show up as a surplus entry.
-        assert len(rules) <= 3
+        """The entrypoint exposes exactly what ``create_app`` builds, and nothing more.
+
+        Compared against a freshly built application rather than against a fixed
+        count, so adding a blueprint the ordinary way does not fail this test while
+        a route defined in the adapter still does.
+        """
+        from pydantic import SecretStr
+
+        from learning_platform.infrastructure.config.settings import AppEnvironment, Settings
+        from learning_platform.web import create_app
+        from learning_platform.web.extensions import get_extensions
+
+        reference = create_app(
+            Settings(
+                app_env=AppEnvironment.TEST,
+                deployment_key="test",
+                database_url=SecretStr(""),
+            )
+        )
+        try:
+            expected = {rule.rule for rule in reference.url_map.iter_rules()}
+        finally:
+            get_extensions(reference).shutdown()
+
+        assert {rule.rule for rule in wsgi_module.app.url_map.iter_rules()} == expected
+        assert "/healthz" in expected
 
     def test_it_does_not_reconfigure_the_application(self, wsgi_module: ModuleType) -> None:
         """Settings come from create_app, so deployed hardening must already hold."""

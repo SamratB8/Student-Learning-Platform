@@ -75,7 +75,7 @@ The importable Python package is `learning_platform`. It is deliberately not nam
 | [0001](docs/adr/0001-implementation-stack.md) | Implementation stack | Accepted |
 | [0002](docs/adr/0002-deployment-model.md) | Deployment model and production hosting | Accepted |
 | [0003](docs/adr/0003-student-ai-architecture.md) | Student AI architecture | Accepted |
-| [0004](docs/adr/0004-background-execution.md) | Background execution runtime | Open |
+| [0004](docs/adr/0004-background-execution.md) | Background execution runtime | Accepted |
 
 ## Licence
 

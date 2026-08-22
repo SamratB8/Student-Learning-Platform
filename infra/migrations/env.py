@@ -18,6 +18,7 @@ from sqlalchemy import engine_from_config, pool
 from learning_platform.infrastructure.audit import models as audit_models  # noqa: F401
 from learning_platform.infrastructure.config.settings import load_settings
 from learning_platform.infrastructure.database.base import Base
+from learning_platform.infrastructure.tasks import models as task_models  # noqa: F401
 
 config = context.config
 

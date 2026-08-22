@@ -92,6 +92,20 @@
 - The production runtime filesystem is ephemeral and untrusted for persistence. Security state is never held in process memory or on local disk between requests.
 - Security headers, TLS, rate limits, and request size limits are enforced by the hosting edge together with application configuration, and each environment is verified independently.
 
+### Background execution
+
+ADR 0004 adds one externally reachable route and one class of deferred work. Both are constrained deliberately.
+
+- The drain endpoint reads nothing from a request except its `Authorization` header. It accepts no task type, payload, identifier, or batch size, so "run an arbitrary task" is not a request that can be expressed rather than a request that is validated away.
+- Authentication is a shared secret compared in constant time. An unconfigured secret denies every request, and the denial is indistinguishable from a wrong secret, so probing reveals nothing about whether background processing is configured.
+- Task types resolve only through an explicit registry populated in Python at composition time. There is no dynamic import and no module path in a payload, so a row written directly into the database can still name nothing this deployment does not already implement.
+- Task payloads carry internal identifiers and scalars. Passwords, tokens, keys, signed URLs, cookies, and message plaintext are refused by name before a row exists, and nested objects are refused outright.
+- Persisted failures are short slugs. Exception messages and tracebacks are never written to the dispatch table, because both routinely quote the values that caused them and the payload is one column away. Full diagnostics go to the redacted operational log.
+- Logs record task identity, type, state, attempt, correlation, and timing. Never the payload.
+- **Authorization is revalidated when a task executes, not assumed from when it was dispatched.** A task may wait a long time, during which a grant can be revoked, a membership can end, or an account can be suspended. Losing permission is a terminal, non-retryable failure that is recorded rather than retried away.
+- Delivery is at-least-once, so a handler will eventually run twice. Idempotency is a security property here and not only a correctness one: a retried task must not duplicate a record, re-notify, or re-widen a scope.
+- Inline execution cannot be selected in a deployed environment. It raises rather than warning, because the failure it would cause is silent.
+
 ### Audit and operations
 
 - Record actor, action, target type/ID, scope, time, result, reason category, request/correlation ID, and source IP classification where justified.

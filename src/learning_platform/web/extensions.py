@@ -15,11 +15,14 @@ from typing import TYPE_CHECKING, Final
 
 from flask import Flask, current_app
 
+from learning_platform.application.tasks.runner import TaskRunner
 from learning_platform.domain.clock import Clock, SystemClock
+from learning_platform.domain.tasks import RetryPolicy
 from learning_platform.infrastructure.config.settings import Settings
 from learning_platform.infrastructure.database.engine import build_engine, dispose_engine
 from learning_platform.infrastructure.database.unit_of_work import UnitOfWorkFactory
-from learning_platform.infrastructure.tasks.inline import InlineTaskDispatcher
+from learning_platform.infrastructure.tasks.observer import LoggingTaskObserver
+from learning_platform.worker import build_task_registry
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine
@@ -36,18 +39,38 @@ class PlatformExtensions:
         self.settings = settings
         self.clock: Clock = clock or SystemClock()
 
-        # ADR 0004 is open, so inline dispatch is the only implementation. Strict in
-        # every environment: dropping work silently is worse than a loud failure.
-        self.tasks = InlineTaskDispatcher(strict=True)
+        # The set of task types this deployment can run, fixed at composition. A row
+        # naming anything else cannot select code (ADR 0004).
+        self.task_registry = build_task_registry()
+        self.retry_policy = RetryPolicy(max_attempts=settings.task_max_attempts)
 
         self._engine: Engine | None = None
         self._unit_of_work_factory: UnitOfWorkFactory | None = None
+        self._task_runner: TaskRunner | None = None
 
         if settings.database_configured:
             # Constructing an engine opens no connection, so this is safe even when
             # PostgreSQL is not running.
             self._engine = build_engine(settings)
-            self._unit_of_work_factory = UnitOfWorkFactory(self._engine)
+            self._unit_of_work_factory = UnitOfWorkFactory(
+                self._engine,
+                task_registry=self.task_registry,
+                clock=self.clock,
+                retry_policy=self.retry_policy,
+            )
+            # Background execution needs durable storage by definition, so there is
+            # no runner without a database. There is deliberately no in-memory
+            # fallback: work that cannot be recorded must not appear to have been
+            # accepted.
+            self._task_runner = TaskRunner(
+                unit_of_work=self._unit_of_work_factory,
+                registry=self.task_registry,
+                clock=self.clock,
+                retry_policy=self.retry_policy,
+                lease_seconds=settings.task_lease_seconds,
+                batch_limit=settings.task_drain_batch_limit,
+                observer=LoggingTaskObserver(),
+            )
 
     @property
     def database_available(self) -> bool:
@@ -76,6 +99,18 @@ class PlatformExtensions:
         if self._unit_of_work_factory is None:
             raise RuntimeError("no database is configured for this application")
         return self._unit_of_work_factory
+
+    @property
+    def task_runner(self) -> TaskRunner:
+        """Runs background work that is due.
+
+        Raises:
+            RuntimeError: if no database is configured, since durable dispatch has
+                nowhere to live.
+        """
+        if self._task_runner is None:
+            raise RuntimeError("no database is configured for this application")
+        return self._task_runner
 
     def shutdown(self) -> None:
         """Release pooled connections. Called when an application is discarded."""

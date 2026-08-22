@@ -67,10 +67,21 @@ identity + source feed  sync         live calls      messaging/E2EE
 
 - Adapters isolate every provider from domain logic.
 - Incoming provider events are idempotent and stored with provider ID, version/etag where available, received time, and processing result.
-- Use an outbox for reliable platform-to-provider synchronization after database commits.
+- Use an outbox for reliable platform-to-provider synchronization after database commits. Under ADR 0004 the `task_dispatch` table is that outbox: `uow.tasks.dispatch(...)` stages a row in the caller's transaction, so provider-facing work is owed if and only if the change that justified it committed. No provider call happens inside a business transaction.
 - Store refresh tokens and service credentials encrypted using deployment secret/key management, never in normal application tables or logs as plaintext.
 - Retry transient failures with bounded backoff; send exhausted failures to an operator-visible dead-letter state.
 - Reconciliation jobs repair missed notifications and drift.
+
+## Background work
+
+ADR 0004 is authoritative. The shape that matters architecturally:
+
+- A durable row is the system of record. A queue, a scheduler, or a message never is, because none of them can be made atomic with a database transaction or survive a redeployment.
+- Application code dispatches through a port that names no topic, endpoint, schedule, or vendor. Swapping the delivery mechanism is an adapter change, and an architecture test enforces that the port stays transport-free.
+- Delivery is at-least-once. Handlers are idempotent, and a stable `idempotency_key` deduplicates at dispatch through a database unique constraint.
+- Task types are a controlled vocabulary resolved through an explicit registry. A task type read from the database can never select code that was not registered in Python at composition time.
+- Handlers live in `worker/`, import `application` and `domain` only, and own no loop, scheduler, broker connection, or transaction they did not open.
+- Recovery is a property of the claim query rather than a separate mechanism: a lease is a deadline on the row, so work abandoned by a killed invocation is simply due again.
 
 ## Classroom pools and deduplication
 
@@ -121,7 +132,7 @@ Production hosting for the web application is Vercel. ADR 0002 records that deci
 - PostgreSQL is an external managed service. Connection handling must tolerate many short-lived invocations; connection pooling strategy is a deployment concern, not an application assumption.
 - Object storage is external, private, and S3-compatible. Downloads use short-lived authorization issued after a fresh policy evaluation.
 - Matrix runs as a separate deployment and is never colocated with the web application.
-- Background work cannot assume a colocated always-running worker. The application depends on a task-dispatch port; the concrete runtime is deferred to ADR 0004.
+- Background work cannot assume a colocated always-running worker. Application code depends on a task-dispatch port, and ADR 0004 selects the runtime behind it: a durable `task_dispatch` table in PostgreSQL, written transactionally with the business change that owes the work, and drained by a scheduled invocation.
 - TLS, security headers, rate limiting, and request size limits are enforced at the platform edge and in application configuration rather than by a self-managed reverse proxy.
 - Separate development, test, staging, and production environments, each with its own database, bucket/prefix, and credentials.
 - PostgreSQL migrations with point-in-time or otherwise verified backups.
@@ -189,5 +200,5 @@ This direction is enforced by an automated test, not by convention alone.
 1. Verify maintained dependency releases and Matrix/Google SDK compatibility when creating Phase 1 lockfiles.
 2. Record additional decisions as ADRs before foundational implementation.
 3. Keep product policy out of provider adapters and CTS labels out of domain identifiers.
-4. Select the background execution runtime through ADR 0004 before implementing any job that cannot complete inside a single request.
+4. Express any work that cannot complete inside a single request as a task dispatched through the port (ADR 0004). Handlers are idempotent, take internal identifiers only, and revalidate authorization at execution time.
 5. Confirm any code that would run on Vercel does not depend on process lifetime, local filesystem persistence, or in-process scheduling.

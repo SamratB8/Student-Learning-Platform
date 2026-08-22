@@ -21,7 +21,7 @@ Production web hosting is Vercel. The application is therefore designed for serv
 4. PostgreSQL is an external managed service. The application must tolerate many short-lived invocations opening connections. Pool sizing and any connection pooler are deployment configuration, not application assumptions.
 5. Object storage is external, private, and S3-compatible.
 6. Matrix is deployed separately and is never colocated with the web application.
-7. Background work is expressed against a task-dispatch port. No always-running colocated worker is assumed. The concrete runtime is deferred to ADR 0004.
+7. Background work is expressed against a task-dispatch port. No always-running colocated worker is assumed. ADR 0004 selects the runtime: a durable dispatch table in PostgreSQL, drained by a scheduled invocation.
 8. TLS, security headers, rate limiting, and request size limits are enforced by the hosting edge together with application configuration, not by a self-managed reverse proxy.
 9. All configuration and secrets come from environment variables. Deployment-specific product values, such as institutions and branches, remain configuration data.
 
@@ -75,13 +75,14 @@ Verified on a live preview with `APP_ENV` deleted entirely. The application reso
 
 - Static assets. Vercel serves `public/**` from its CDN, and Flask's `static_folder` must not be used. With no `public/` directory, every path routes to the function, which was confirmed by requesting a `.css` path and receiving the application's own JSON 404. Publishing the design tokens belongs with the first page that uses them.
 - Deriving `APP_BASE_URL` per preview deployment. It is currently a fixed project URL, which is correct for production but not for a per-deployment preview URL. `VERCEL_URL` is an environment variable rather than a request header, so reading it would not violate the rule against trusting request-supplied origins.
-- Managed PostgreSQL, connection pooling strategy, object storage, the background runtime (ADR 0004), and a custom domain.
+- Managed PostgreSQL, connection pooling strategy, object storage, and a custom domain.
+- Attaching the scheduled background drain. ADR 0004 chose the mechanism and it is tested, but Vercel Cron invokes the production deployment URL only, so it cannot be wired up while the project deliberately has no production deployment.
 - A production deployment. The accidental one was removed on 22 August 2026 and the project deliberately has none, no Production environment variables, and a production URL that answers `DEPLOYMENT_NOT_FOUND`. Promotion is a decision to take when the product is ready for it, not a side effect of a first deploy.
 
 ## Consequences
 
 - The architecture stays a modular monolith. Only the runtime changes.
-- Any feature requiring work longer than one request must wait for ADR 0004. This is a real constraint on Classroom synchronization, indexing, malware scanning, notification fan-out, and archive generation.
+- Work longer than one request goes through the durable dispatch table selected in ADR 0004, which is now accepted. The remaining constraint is scheduling rather than architecture: a drain must be triggered, and on the current plan that can happen at most once a day.
 - Database access patterns matter earlier than they otherwise would, because connection churn is higher than with a long-lived process.
 - Development and production runtimes differ. The Flask development server is never a production runtime, and code must not rely on behavior unique to it.
 - Integration failures still must not fail authorization open. Serverless retries make idempotency more important, not less.

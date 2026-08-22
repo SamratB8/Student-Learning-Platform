@@ -10,6 +10,11 @@ classifiers = ["Private :: Do Not Upload"]
 dependencies = [
     # Application composition and server-rendered surfaces (ADR 0001).
     "flask>=3.1,<4",
+    # Already present as a Flask dependency, declared explicitly because the task
+    # administration commands import it directly (ADR 0004). Depending on something
+    # only because a framework happens to vendor it is how a transitive upgrade
+    # becomes an unexplained breakage.
+    "click>=8.1,<9",
     # Persistence and migrations (ADR 0001). SQLAlchemy 2.x declarative style only.
     "sqlalchemy>=2.0.43,<2.1",
     "alembic>=1.16,<2",

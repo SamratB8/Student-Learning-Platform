@@ -99,13 +99,23 @@ Profiles are versioned rather than overwritten because hardware changes, browser
 - `Notification`: user, category, safe payload/reference, read/dismissed state.
 - `NotificationPreference`: category/channel, enabled, quiet hours/digest, resolved per user and per category rather than as one global switch.
 - `CalendarSubscription`: user, event category or scope, whether it is synchronized to Google Calendar, and reminder preferences.
-- `TaskDispatch`: durable record of background work dispatched through the task port, with name, payload reference, state, attempts, and outcome. Its concrete runtime is deferred to ADR 0004.
+- `TaskDispatch` (`task_dispatch`): the durable record of background work, and the transactional outbox. Task type, payload schema version, JSONB payload of internal identifiers, state, `available_at`, lease deadline, attempt count and budget, sanitized failure code, idempotency key, and correlation ID. Implemented in Phase 1B under ADR 0004; it is the system of record, and no queue or scheduler ever is.
 - `SearchDocument`: permitted non-E2EE index projection with audience/scope fields.
 - `AuditEvent`: append-oriented actor/action/target/scope/result/reason/correlation metadata.
 - `IntegrationEvent`: provider event ID, idempotency state, processing outcome.
-- `OutboxEvent`: reliable pending platform-side integration work.
+- `OutboxEvent`: reliable pending platform-side integration work. Not a separate table: `TaskDispatch` serves this role, because a second outbox would be a second system of record with the same atomicity problem already solved.
 - `DraftSubmission`: restricted publisher, kind, untrusted payload/object, validation/quarantine/review state.
 - `ArchiveJob`, `ArchiveManifest`, `ArchiveEntry`: scope, requester, state, checksums, retention/expiry.
+
+## Background work semantics
+
+- A `TaskDispatch` row is inserted in the same transaction as the business change that owes the work. Both commit or neither does, so there is no state in which a change happened and its follow-up was lost, or in which work is owed for a change that rolled back.
+- States are `PENDING`, `CLAIMED`, `SUCCEEDED`, `FAILED`, `EXHAUSTED`, and `CANCELLED`. Transitions are validated; illegal ones are refused rather than tolerated.
+- `FAILED` and `EXHAUSTED` are distinct. `FAILED` means this code can never run this row, for example an unknown task type or a revoked permission. `EXHAUSTED` means it could have, and work was lost. Only `EXHAUSTED` is an operational alarm.
+- `claimed_until` is a lease deadline on the row, not a lock held by a process. An expired lease makes the row due again, which is how work abandoned by a killed invocation recovers without a separate reaper.
+- `idempotency_key` is unique at the database level and nullable. NULLs do not collide in PostgreSQL, so work with no natural key is never forced to invent one.
+- `payload_version` is stored from the first migration, because rows outlive deployments: a task dispatched by one version may still be pending when the next drains it.
+- `last_error_code` holds a short slug only. Exception messages and tracebacks are never persisted; they quote the values that caused them, and the payload sits in an adjacent column.
 
 ## Critical invariants
 
@@ -120,4 +130,6 @@ Profiles are versioned rather than overwritten because hardware changes, browser
 - A `ResourceReport` is a signal for review. It never mutates resource state automatically.
 - A `DeviceInstallation` identifier is random and revocable. It is never reconstructed from hardware attributes, and it is not a cross-user identifier.
 - A `CapabilityProfile` cannot grant authorization. It only decides whether optional on-device work is viable.
+- A `TaskDispatch` payload carries internal identifiers and scalars only. Secrets, tokens, keys, message plaintext, and entity graphs are refused before a row can be written, and a task type read from this table can never select code that was not registered in the application.
+- Authorization is revalidated when a task executes. A permission that held at dispatch is not assumed to still hold, because a task may run long after the request that asked for it.
 - Data reaching an AI provider is limited to academic context already authorized for that user. Personal, message, contact, authentication, and administrative records are excluded by construction, not by filtering after retrieval.

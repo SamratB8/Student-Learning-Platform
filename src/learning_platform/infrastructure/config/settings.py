@@ -119,6 +119,30 @@ class Settings(BaseSettings):
     budget. The floor is 2 because libpq silently raises anything lower.
     """
 
+    task_runner_secret: SecretStr = SecretStr("")
+    """Shared secret that authenticates a background drain request (ADR 0004).
+
+    Not required at startup, deliberately. An empty value makes the drain endpoint
+    refuse every request, which is the safe direction: a deployment with no
+    background work configured should serve traffic normally rather than fail to
+    boot, and one that has scheduled drains cannot function until this is set.
+    """
+
+    task_lease_seconds: int = Field(default=300, ge=10, le=3600)
+    """How long a claimed task stays leased before another runner may reclaim it.
+
+    Defaults to the platform's own invocation ceiling, so a task abandoned by a
+    killed invocation is reclaimable at roughly the moment that invocation could no
+    longer have been running.
+    """
+
+    task_drain_batch_limit: int = Field(default=10, ge=1, le=100)
+    """How many tasks one drain claims. Bounded so a drain finishes inside an
+    invocation budget rather than being killed part-way through a batch."""
+
+    task_max_attempts: int = Field(default=5, ge=1, le=20)
+    """Default retry budget. A dispatch may ask for a different one."""
+
     log_level: str = "INFO"
     log_format: LogFormat | None = None
     """Defaults to console in development and test, JSON when deployed."""
@@ -210,6 +234,16 @@ class Settings(BaseSettings):
     def database_configured(self) -> bool:
         return bool(self.database_url.get_secret_value())
 
+    @property
+    def task_runner_configured(self) -> bool:
+        """Whether background drains can be authenticated.
+
+        False means the drain endpoint denies everything. Reported at startup so an
+        operator can see that scheduled background work is inert rather than
+        discovering it from a queue that never empties.
+        """
+        return bool(self.task_runner_secret.get_secret_value().strip())
+
     def resolved_secret_key(self) -> str:
         """Return the signing key, generating an ephemeral one where that is safe.
 
@@ -242,6 +276,9 @@ class Settings(BaseSettings):
             "session_signing": (
                 "configured" if self.secret_key.get_secret_value() else "ephemeral"
             ),
+            # Named without the words "secret" or "key": the log redactor matches on
+            # field names and would replace this otherwise useful status string.
+            "task_invocation": ("configured" if self.task_runner_configured else "unconfigured"),
             "debug": self.debug,
         }
 

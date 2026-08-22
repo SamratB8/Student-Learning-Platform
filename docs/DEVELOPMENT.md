@@ -92,6 +92,72 @@ curl.exe http://127.0.0.1:5000/readyz
 The Flask development server is not a production runtime. Production is Vercel
 (ADR 0002).
 
+## Background work
+
+Durable background work is a `task_dispatch` table drained on demand (ADR 0004).
+There is no queue to run, no broker to install, and no worker process to keep alive.
+
+Dispatch a no-op task that proves the whole path works:
+
+```powershell
+uv run flask --app learning_platform.web:create_app tasks verify --note local-check
+```
+
+Run whatever is currently due:
+
+```powershell
+uv run flask --app learning_platform.web:create_app tasks drain
+```
+
+Count tasks by state:
+
+```powershell
+uv run flask --app learning_platform.web:create_app tasks status
+```
+
+`drain` deliberately makes one pass rather than looping. In a deployment every drain
+is a fresh invocation with a bounded budget, and a long-running local worker would
+diverge from that in ways only discovered after deploying.
+
+`status` reports counts per state. The one worth watching is `exhausted`: it counts
+work the platform accepted and then failed to complete within its retry budget.
+
+The same code runs behind `POST /internal/tasks/drain`, which is what a scheduled
+invocation calls. That endpoint denies every request unless `TASK_RUNNER_SECRET` is
+set, so it is inert locally by default and the commands above are the local path.
+
+### Writing a handler
+
+Handlers live in `src/learning_platform/worker/` and are registered explicitly in
+`worker/registry.py`. A handler takes a `TaskContext` and does its work; it owns no
+loop, no scheduler, and no transaction it did not open, and it imports `application`
+and `domain` only.
+
+Two obligations are not optional:
+
+- **Be idempotent.** Delivery is at-least-once. A handler will eventually run twice
+  for one dispatch, and `TaskContext.attempt` above 1 means a previous try did not
+  finish.
+- **Revalidate authorization.** A task may run long after the request that asked for
+  it, by which time a grant may have been revoked. Raise `TaskFailed` with
+  `TaskFailureKind.AUTHORIZATION_INVALIDATED` rather than proceeding.
+
+Dispatch from a use case inside the transaction that justifies the work:
+
+```python
+with unit_of_work_factory() as unit_of_work:
+    unit_of_work.resources.add(resource)
+    unit_of_work.tasks.dispatch(
+        INDEX_RESOURCE,
+        {"resource_id": str(resource.id)},
+        idempotency_key=f"index-{resource.id}-{resource.version}",
+    )
+```
+
+Both writes commit together or neither does. That is the point: there is no state
+where the resource exists but the indexing request was lost, and none where indexing
+was requested for a resource that was rolled back.
+
 ## Tests
 
 Everything:
@@ -171,6 +237,12 @@ institution-neutral, and an architecture test enforces it.
 Staging and production refuse to start without `SECRET_KEY`, `DATABASE_URL`,
 `DEPLOYMENT_KEY`, and an https `APP_BASE_URL`. That failure is intentional.
 
+`TASK_RUNNER_SECRET` is deliberately *not* required at startup. An unset value makes
+the drain endpoint deny every request, so a deployment with no background work
+configured serves ordinary traffic normally, and one with scheduled drains simply
+does nothing until the secret is set. Failing to boot over it would be the wrong
+trade: inert is safe, and a refused boot is not.
+
 Generate a signing key:
 
 ```powershell
@@ -185,7 +257,7 @@ src/learning_platform/
   application/     use cases and ports (interfaces)
   infrastructure/  config, database, observability, audit, tasks
   web/             Flask composition, blueprints, error handling
-  worker/          background handlers (no runtime chosen yet, ADR 0004)
+  worker/          background task handlers and the task registry (ADR 0004)
 frontend/shared/   design tokens
 infra/
   containers/      development-only container definitions
@@ -256,6 +328,7 @@ safely must not serve requests.
 | `DEPLOYMENT_KEY` | Which deployment configuration applies. |
 | `APP_BASE_URL` | Externally visible https origin. |
 | `DATABASE_CONNECT_TIMEOUT_SECONDS` | Optional. Lower than the default 10 keeps `/readyz` inside the function budget while no database is reachable. |
+| `TASK_RUNNER_SECRET` | Optional. Authenticates the background drain endpoint. Unset means the endpoint denies everything, which is the correct inert state until scheduled work is wanted. Must equal `CRON_SECRET` when a cron job is configured. |
 
 Generate a signing key without it appearing in your shell history or scrollback:
 
@@ -344,7 +417,13 @@ vercel logs https://your-preview-url.vercel.app --json
   must not be used. No `public/` directory exists yet, so every path routes to the
   function; the design tokens in `frontend/shared/` are published with the first page
   that uses them.
-- Background execution runtime (ADR 0004).
+- Attaching a scheduled drain. Vercel Cron invokes the **production** deployment URL
+  only, and this project has no production deployment, so the trigger is unproven on
+  Vercel even though the endpoint it would call is fully tested. Enabling it needs a
+  production deployment, `TASK_RUNNER_SECRET` and `CRON_SECRET` set to the same value,
+  and a `crons` entry in a `vercel.json` that does not yet exist. On the Hobby plan a
+  cron may fire at most once per day, and a more frequent expression fails the
+  deployment outright.
 
 ## Notes for PyCharm
 
@@ -361,6 +440,8 @@ Not blocking development, but required before a real deployment:
 - Restrict `UPDATE` and `DELETE` on `audit_events` at the database-role level. The
   application never issues them, but the table is only append-oriented by convention
   until the grants enforce it.
-- Choose the background execution runtime (ADR 0004). Until then, no feature may
-  depend on work that cannot finish inside a single request.
+- Configure the scheduled drain in a deployment: `TASK_RUNNER_SECRET`, a matching
+  `CRON_SECRET`, and a `crons` entry. Until that exists, dispatched work accumulates
+  in `task_dispatch` and is only executed by running the command by hand. Nothing is
+  lost, but nothing runs on its own either.
 - Decide the production connection-pooling strategy for a serverless runtime.

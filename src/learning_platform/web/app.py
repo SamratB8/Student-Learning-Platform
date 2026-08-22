@@ -23,6 +23,8 @@ from learning_platform.infrastructure.observability.logging import (
     get_logger,
 )
 from learning_platform.web.blueprints.health import health_blueprint
+from learning_platform.web.blueprints.tasks import tasks_blueprint
+from learning_platform.web.commands import register_task_commands
 from learning_platform.web.errors import register_error_handlers
 from learning_platform.web.extensions import EXTENSION_KEY, PlatformExtensions
 from learning_platform.web.middleware import register_request_context
@@ -65,6 +67,8 @@ def create_app(settings: Settings | None = None, **overrides: Any) -> Flask:
     register_error_handlers(app, resolved)
 
     app.register_blueprint(health_blueprint)
+    app.register_blueprint(tasks_blueprint)
+    register_task_commands(app)
 
     # Non-secret facts only. Settings.safe_summary never returns a secret value.
     #
