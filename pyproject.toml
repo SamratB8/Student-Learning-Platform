@@ -1,0 +1,132 @@
+[project]
+name = "student-learning-platform"
+version = "0.1.0"
+description = "Institution-neutral student learning platform."
+requires-python = ">=3.14,<3.15"
+license = { file = "LICENSE" }
+# Proprietary. See LICENSE. Never publish this distribution.
+classifiers = ["Private :: Do Not Upload"]
+
+dependencies = [
+    # Application composition and server-rendered surfaces (ADR 0001).
+    "flask>=3.1,<4",
+    # Persistence and migrations (ADR 0001). SQLAlchemy 2.x declarative style only.
+    "sqlalchemy>=2.0.43,<2.1",
+    "alembic>=1.16,<2",
+    # PostgreSQL driver. The binary extra ships cp314 wheels, so Windows needs no build toolchain.
+    "psycopg[binary]>=3.2,<4",
+    # Typed, validated configuration with environment and .env support.
+    "pydantic>=2.11,<3",
+    "pydantic-settings>=2.8,<3",
+    # Structured logging with a redaction pipeline.
+    "structlog>=25.1,<27",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<10",
+    "pytest-cov>=6,<8",
+    "ruff>=0.11,<1",
+    "mypy>=1.15,<3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/learning_platform"]
+
+# ---------------------------------------------------------------------------
+# Vercel (ADR 0002)
+#
+# The Python runtime resolves the WSGI application from this module:variable pair.
+# Stated explicitly rather than relying on filename auto-detection, because this
+# repository uses a src layout and auto-detection also scans `src/` for entrypoint
+# filenames. Vercel documents `tool.vercel.entrypoint` as the approach for new
+# projects.
+#
+# The Python version is not repeated here. Vercel reads `requires-python` above and
+# `.python-version`, both of which already pin 3.14.
+# ---------------------------------------------------------------------------
+[tool.vercel]
+entrypoint = "wsgi:app"
+
+[tool.uv]
+package = true
+# The uv cache lives on the system drive while this repository is on another, so
+# hardlinking is unavailable and uv warns on every sync. Copying is the correct
+# behavior here, stated explicitly rather than left as a recurring warning.
+link-mode = "copy"
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "F",   # pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "I",   # import sorting
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "S",   # flake8-bandit (security)
+    "C4",  # comprehensions
+    "SIM", # simplify
+    "TID", # tidy imports
+    "RUF",
+]
+ignore = [
+    "E501", # line length is enforced by the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately assert, and may bind to localhost fixtures.
+"tests/**" = ["S101", "S104", "S105", "S106"]
+# Alembic generates its own conventions.
+"infra/migrations/**" = ["S101"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["learning_platform"]
+
+# ---------------------------------------------------------------------------
+# mypy
+# Enabled now so type debt does not accumulate, but not maximally strict on day one.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.14"
+files = ["src", "tests"]
+strict = false
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# Puts the repository root on sys.path so the root-level `wsgi` hosting entrypoint is
+# importable by its test. This mirrors the Vercel runtime, where the project base is
+# the working directory and the entrypoint module is resolved from there. The
+# application package itself is installed, not found this way.
+pythonpath = ["."]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: requires a reachable PostgreSQL database",
+]
+filterwarnings = ["error"]

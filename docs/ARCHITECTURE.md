@@ -45,6 +45,9 @@ identity + source feed  sync         live calls      messaging/E2EE
 - `audit`: append-oriented security and administrative events.
 - `draft_ingress`: one-way ChatGPT draft validation and quarantine/review.
 - `archive`: scoped exports, manifests, checksums, retention and transition workflows.
+- `personal`: per-user bookmarks, recently viewed items, progress checklists, study tasks, and collections.
+- `devices`: installation records and versioned capability profiles used to decide whether optional on-device work is viable.
+- `assistance`: authorization-first context assembly for the ChatGPT handoff, and the internal AI utility port. It never bypasses `authorization`.
 
 ## Ownership boundaries
 
@@ -79,47 +82,112 @@ The web client uses a supported Matrix SDK behind a platform-owned messaging ada
 
 Message content is not copied into PostgreSQL for search, moderation convenience, or analytics. Reports contain only content deliberately submitted by a reporter and the minimum event reference necessary for review.
 
+## AI architecture
+
+ADR 0003 is authoritative. Structurally there are three separate things, and they must not be merged into one "AI service":
+
+- Quick AI executes in the browser on the user's device where the capability profile permits. It is optional and the platform never depends on it.
+- Continue in ChatGPT is a deterministic export path. Authorization runs first, retrieval returns only permitted academic context, ordinary code assembles a source-marked prompt, and the user carries it to their own ChatGPT account by clipboard. The platform never calls, automates, or authenticates against ChatGPT.
+- The internal AI utility is a server-side port with a single initial adapter. It is not reachable from any student-facing route.
+
+The internal AI utility complements deterministic code, retrieval, and indexing. It never replaces them. The order of preference is deterministic code and rules, then retrieval and indexing, then optional AI enhancement. When the provider fails, is disabled, is rate limited, or is removed entirely, retrieval, prompt preparation, and the academic library continue working with reduced polish and no loss of correctness. Never use a model where ordinary code is reliable, cheap, and deterministic.
+
+Authorization happens before retrieval, and retrieval happens before anything is sent to an external provider. The privacy boundary is defined in SECURITY_MODEL.md.
+
+## Device capability profiles
+
+`DeviceInstallation` records a randomly generated installation identifier chosen by the client and stored against the user. It is not a hardware fingerprint and must not be reconstructed from hardware attributes. Each installation may have several `CapabilityProfile` versions, because measurements are invalidated by hardware, browser, and benchmark changes.
+
+Profiles record measured behavior rather than reported hardware names, since browsers do not reliably expose CPU model, exact memory, GPU, or NPU details. Candidate measurements include computation throughput, WebGPU availability and performance, practical memory headroom, storage quota, network latency and throughput, and local model load and inference timing. Any measurement heavy enough to be noticeable requires consent and must not run on every visit.
+
+Consumers ask the profile a capability question, such as whether on-device summarization is viable. They do not read raw benchmark numbers scattered through the codebase.
+
+## Presentation architecture
+
+Ordinary public, member, and admin surfaces are server-rendered Jinja. Client-heavy areas, chiefly the custom Matrix experience, are focused TypeScript browser applications. No single-page-application framework is adopted without an ADR that supersedes ADR 0001.
+
+The design system is a project-owned token layer expressed as CSS custom properties. Tokens define colour roles, spacing, typography scale, radii, elevation, and motion. Appearance is selected as System, Light, or Dark; System follows `prefers-color-scheme` and an explicit choice overrides it. Because colours are referenced only through role tokens, dark mode is a token swap rather than a later retrofit.
+
+Layout is responsive from content-driven breakpoints, not device names, and is exercised from roughly 320px upward. Interaction assumes touch first: pointer hover is an enhancement, focus states are always visible, and motion respects `prefers-reduced-motion`.
+
+The application is designed to be installable (PWA-ready). Service worker and offline behavior are deliberately out of scope for early phases; the architecture only guarantees that adding them later does not require restructuring.
+
 ## Deployment model
 
-- Separate development, test, staging, and production environments.
-- PostgreSQL with migrations and point-in-time/verified backups.
-- S3-compatible private object storage; downloads use short-lived authorization after policy evaluation.
-- Queue/worker process for sync, indexing, scanning, notifications, and exports.
-- Reverse proxy/edge with TLS, security headers, rate limiting, and request size limits.
+Production hosting for the web application is Vercel. ADR 0002 records that decision and its consequences. The important architectural constraints are:
+
+- Web request handling is a serverless invocation, not a long-lived process. Nothing may rely on in-process state surviving between requests, on background threads outliving a response, or on process-local caches, schedulers, or locks.
+- The runtime filesystem is ephemeral and must be treated as read-only working space. Uploads, exports, and generated artefacts belong in object storage.
+- PostgreSQL is an external managed service. Connection handling must tolerate many short-lived invocations; connection pooling strategy is a deployment concern, not an application assumption.
+- Object storage is external, private, and S3-compatible. Downloads use short-lived authorization issued after a fresh policy evaluation.
+- Matrix runs as a separate deployment and is never colocated with the web application.
+- Background work cannot assume a colocated always-running worker. The application depends on a task-dispatch port; the concrete runtime is deferred to ADR 0004.
+- TLS, security headers, rate limiting, and request size limits are enforced at the platform edge and in application configuration rather than by a self-managed reverse proxy.
+- Separate development, test, staging, and production environments, each with its own database, bucket/prefix, and credentials.
+- PostgreSQL migrations with point-in-time or otherwise verified backups.
 - Central structured logs and metrics with privacy filtering.
 
-## Proposed repository structure
+Local development is Windows-native. Development PostgreSQL runs in Docker Desktop. The development server is not a production runtime.
+
+## Internal Python package name
+
+The product and repository are named "Student Learning Platform". The importable Python package is `learning_platform`, distributed as `student-learning-platform`.
+
+`platform` was rejected as an import name because it shadows the `platform` standard-library module. This was verified rather than assumed: with a `src` directory at the front of `sys.path`, which is the normal result of marking `src` as a sources root in an IDE or of test-runner path insertion, `import platform` resolves to the project package instead of the standard library. Alembic, SQLAlchemy, and packaging tooling all import `platform`, so the failure mode is a confusing breakage in dependencies rather than in project code.
+
+## Repository structure
 
 ```text
 student-learning-platform/
-  src/platform/
-    web/                 # Flask composition, routes, forms, templates
-    domain/              # framework-neutral entities and policies
-    application/         # use cases, transactions, ports
-    infrastructure/      # database, storage, queues, observability
-    integrations/        # Google, Matrix provisioning, object storage
-    worker/              # job entry point and handlers
+  src/learning_platform/
+    domain/              # framework-neutral entities, policies, value objects
+    application/         # use cases and ports (interfaces) only
+    infrastructure/      # config, database, observability, audit, tasks
+    integrations/        # Google, Matrix provisioning, object storage adapters
+    web/                 # Flask composition, blueprints, templates, error handling
+    worker/              # background job handlers, invoked by the chosen runtime
   frontend/
+    shared/              # project-owned design tokens and browser utilities
     messaging/           # TypeScript custom Matrix client experience
-    shared/              # project-owned browser utilities/design tokens
   config/
     deployments/cts.example.yaml
   docs/
+    adr/
   infra/
-    containers/
-    migrations/
-    deployment/
-  scripts/
+    containers/          # development-only container definitions
+    migrations/          # Alembic revision history
   tests/
-    architecture/
-    security/
-    integration/
+    architecture/        # dependency-direction and boundary enforcement
+    integration/         # PostgreSQL-backed tests
+    security/            # denial and leakage tests
+    unit/
+    web/
+  scripts/
 ```
 
-Only documentation and safe configuration examples exist in Phase 0. Claude should create application folders as the first Phase 1 foundation task, following ADR 0001.
+Directories are created when they have a near-term purpose, not in advance.
+
+## Dependency direction
+
+```text
+web  ->  application  ->  domain
+worker  ->  application  ->  domain
+infrastructure  ->  application  ->  domain
+integrations  ->  application  ->  domain
+```
+
+- `domain` imports nothing from Flask, SQLAlchemy, Alembic, pydantic-settings, or any provider SDK.
+- `application` defines ports and orchestrates use cases. It imports `domain` only.
+- `infrastructure` and `integrations` implement ports. They may import frameworks and provider SDKs.
+- `web` composes: it wires configuration and adapters into the application layer and handles HTTP concerns.
+- No layer below `web` reads Flask request globals. Request-scoped values are passed explicitly or carried in a framework-neutral context variable.
+
+This direction is enforced by an automated test, not by convention alone.
 
 ## Architecture decision gates
 
 1. Verify maintained dependency releases and Matrix/Google SDK compatibility when creating Phase 1 lockfiles.
 2. Record additional decisions as ADRs before foundational implementation.
 3. Keep product policy out of provider adapters and CTS labels out of domain identifiers.
+4. Select the background execution runtime through ADR 0004 before implementing any job that cannot complete inside a single request.
+5. Confirm any code that would run on Vercel does not depend on process lifetime, local filesystem persistence, or in-process scheduling.

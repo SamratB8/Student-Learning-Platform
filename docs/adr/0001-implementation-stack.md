@@ -1,6 +1,6 @@
 # ADR 0001: Implementation Stack
 
-- Status: Accepted for Phase 1
+- Status: Accepted for Phase 1. The worker runtime clause is superseded by ADR 0002 and ADR 0004.
 - Date: 20 August 2026
 - Decision basis: frozen v1 requirements and delivery constraints
 
@@ -16,7 +16,7 @@ Build a clean, independent modular monolith using:
 - SQLAlchemy and Alembic against PostgreSQL for persistence and migrations.
 - Jinja plus a project-owned responsive design system for ordinary pages.
 - TypeScript bundled as focused browser applications where client complexity warrants it, especially the custom Matrix UI using the supported Matrix JavaScript SDK.
-- A separate worker process sharing domain/application packages for Classroom/Calendar synchronization, indexing, scanning, notifications, outbox delivery, and archives. Select the concrete queue/runtime in a later ADR after deployment constraints are known.
+- Background handlers for Classroom/Calendar synchronization, indexing, scanning, notifications, outbox delivery, and archives, sharing the domain and application packages and dispatched through a port. Select the concrete queue/runtime in a later ADR after deployment constraints are known. ADR 0002 removed the assumption that this is a colocated always-running process; ADR 0004 owns the runtime choice.
 - S3-compatible private object storage through a provider-neutral adapter.
 - Pytest plus browser-level and security-denial testing. PostgreSQL-backed integration tests are required; SQLite may be used only for tests that do not depend on database-specific behavior.
 

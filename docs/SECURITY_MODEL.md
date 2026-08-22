@@ -27,6 +27,8 @@
 - Secret leakage through source, logs, errors, backups, or client bundles.
 - Admin privilege escalation, unsafe bulk export, audit tampering, and insider misuse.
 - Prompt/content injection through the ChatGPT receiver; a draft is untrusted content, not an instruction.
+- Over-collection or leakage through an AI path: retrieving more context than the user may see, or sending private data to a provider.
+- Device capability data used as a covert fingerprint or as a basis for an authorization decision.
 
 ## Required controls
 
@@ -68,6 +70,28 @@
 - Do not log or server-index plaintext. Notifications use privacy-safe wording.
 - Advertise E2EE only after encrypted-room defaults, membership-change tests, multi-device behavior, key storage/recovery, and an independent security review pass.
 
+### AI privacy boundary
+
+- Authorization runs before retrieval, and retrieval runs before any content reaches an external AI provider. An authorization failure stops the flow rather than degrading into unfiltered retrieval.
+- Never send to any AI provider, automatically or otherwise: direct messages, Matrix message history, group chat plaintext, phone numbers, email addresses, approval records, authentication or session data, OAuth tokens, Matrix keys, administrative or audit records, or unrelated personal information.
+- The internal AI utility is server-side infrastructure. It is not reachable from any student-facing route, and its credentials never reach a browser.
+- The Continue in ChatGPT handoff is clipboard-based. The platform never authenticates to, calls, or automates a student's ChatGPT account, and no user-supplied provider key is accepted.
+- Every AI-assisted path has a defined deterministic result. Provider failure degrades polish, never correctness or authorization.
+- Treat model output as untrusted content, exactly like a provider payload or an upload. It is never an instruction and never a source of authorization.
+
+### Devices and capability profiles
+
+- A device installation is identified by a randomly generated, revocable identifier supplied by the client. Invasive hardware fingerprinting is prohibited.
+- Capability measurement heavy enough to be noticeable requires informed consent and must not run on every visit.
+- A capability profile influences whether optional on-device work is offered. It never influences an authorization decision.
+- A user can see and revoke their own installations.
+
+### Client and hosting boundaries
+
+- Secrets, provider credentials, and service keys never appear in templates, frontend bundles, source maps, or client-readable configuration.
+- The production runtime filesystem is ephemeral and untrusted for persistence. Security state is never held in process memory or on local disk between requests.
+- Security headers, TLS, rate limits, and request size limits are enforced by the hosting edge together with application configuration, and each environment is verified independently.
+
 ### Audit and operations
 
 - Record actor, action, target type/ID, scope, time, result, reason category, request/correlation ID, and source IP classification where justified.
@@ -84,3 +108,5 @@
 - Matrix E2EE claim gate complete before marketing claims.
 - Integration secret scan and log-redaction tests pass.
 - Archive/export privacy review and restore test pass.
+- AI privacy boundary tested: authorization precedes retrieval, excluded data classes cannot enter a prompt, and every AI path has a verified deterministic fallback.
+- Accessibility review complete: keyboard-only operation, visible focus, contrast, reduced motion, and narrow-viewport usability on every user-facing surface.

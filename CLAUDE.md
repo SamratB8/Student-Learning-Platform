@@ -8,7 +8,9 @@ This software is privately owned and institution-neutral. CTS is the first deplo
 
 ## Current phase
 
-Phase 0 is complete pending owner review/commit. Begin only Phase 1 foundation when instructed; do not jump ahead to user-facing product features.
+Phase 1A (runnable foundation) is complete. Phase 1B is the remaining foundation work. Do not jump ahead to user-facing product features.
+
+The v1 feature set is frozen. New ideas belong in a post-v1 backlog unless they close a genuine architectural or security hole.
 
 ## Non-negotiable decisions
 
@@ -22,12 +24,18 @@ Phase 0 is complete pending owner review/commit. Begin only Phase 1 foundation w
 - Permission-filtered global search; E2EE message plaintext is not server-indexed.
 - Mobile-usable admin, in-app notifications, security audit trail, archive/export, and a clean BTech transition.
 - ChatGPT integration is one-way draft ingestion. It cannot read, publish, update arbitrary records, delete, or administer. Never automatically send member data to AI.
+- Production web hosting is Vercel (ADR 0002). No always-running colocated worker, no reliance on process lifetime, no local filesystem persistence. Background runtime is deferred to ADR 0004.
+- Three separate AI concepts (ADR 0003): on-device Quick AI, the clipboard-based Continue in ChatGPT handoff, and the server-only internal AI utility. AI complements deterministic code and retrieval; it never replaces them, and the platform stays fully functional without it. No BYOK, no automating a user's ChatGPT account.
+- Responsive support for phone, tablet, laptop, and desktop from roughly 320px up, with keyboard access, visible focus, contrast, reduced motion, and System/Light/Dark appearance built on design tokens. PWA-ready architecture; full offline is not a v1 promise.
+- Device capability profiles use a random, revocable installation identifier, never invasive fingerprinting, and never influence authorization.
 
 ## Engineering rules
 
+- The importable Python package is `learning_platform`. Never name it `platform`; that shadows a standard-library module.
+- Respect the layer direction: `domain` imports no framework, `application` holds ports and use cases, `infrastructure` and `integrations` implement ports, `web` composes. Nothing below `web` touches Flask request globals. An architecture test enforces this.
 - Deny authorization by default and enforce it server-side.
 - Keep provider code behind adapters and domain rules provider-independent.
-- Use generated internal IDs and typed external IDs.
+- Use generated internal IDs (UUIDv7) and typed external IDs.
 - Treat provider payloads, uploads, and AI drafts as untrusted data.
 - Never put secrets, tokens, signed URLs, private keys, message plaintext, or sensitive payloads in source or logs.
 - Migrations are forward-reviewed and tested; do not edit already-released migrations.

@@ -1,18 +1,48 @@
+# Secrets and local environment
 .env
 .env.*
 !.env.example
+secrets/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Node
 node_modules/
 .next/
 dist/
 build/
 coverage/
 .cache/
-*.log
-*.local
-.DS_Store
-Thumbs.db
+
+# Editors and OS
 .idea/
 .vscode/
+.DS_Store
+Thumbs.db
+
+# Local working files
+*.log
+*.local
 tmp/
 uploads/
-secrets/
+
+# Vercel CLI state. `.vercel/` holds the project link, and the CLI writes
+# `.env.local` there and at the root containing a VERCEL_OIDC_TOKEN.
+#
+# The CLI appended a bare `.env*` here on first link. That is removed: it came after
+# the `!.env.example` negation above and silently re-ignored the example file, which
+# is committed on purpose. The rules at the top of this file already cover every
+# `.env` variant.
+.vercel/
